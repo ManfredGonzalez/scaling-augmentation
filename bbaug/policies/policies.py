@@ -37,7 +37,7 @@ __all__ = [
     'policies_v1',
     'policies_v2',
     'policies_v3',
-    'policies_pineapples_zoom_in_5',
+    'policies_pineapple',
     'PolicyContainer',
 ]
 
@@ -321,26 +321,26 @@ def policies_v3() -> List[List[POLICY_TUPLE_TYPE]]:
     ]
     return policy
 
-def policies_pineapples_zoom_in_5():
+def policies_pineapple(scaling):
     """
     Policy to apply in the case of pineapples
 ​
     :rtype: List[List[POLICY_TUPLE_TYPE]]
     :return: List of policies
     """
-    policy = [
-      [
-          #POLICY_TUPLE('Zoom_Scale', 1.0, 0.33333) # 15_from_5
-          #POLICY_TUPLE('Zoom_Scale', 1.0, 0.625) # 8_from_5
-          
-          #POLICY_TUPLE('Zoom_Scale', 1.0, 1.6) # 5_from_8
-          #POLICY_TUPLE('Zoom_Scale', 1.0, 0.53333) # 15_from_8
-          
-          POLICY_TUPLE('Zoom_Scale', 1.0, 3) # 5_from_15
-          #POLICY_TUPLE('Zoom_Scale', 1.0, 1.875) # 8_from_15
-          
-      ],
-    ]
+    if scaling == '15_from_5':
+        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 0.33333) ],]
+    elif scaling == '8_from_5':
+        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 0.625) ],]
+    elif scaling == '5_from_8':
+        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 1.6) ],]
+    elif scaling == '15_from_8':
+        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 0.53333) ],]
+    elif scaling == '5_from_15':
+        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 3) ],]
+    elif scaling == '8_from_15':
+        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 1.875) ],]
+    
     return policy
 
 
@@ -356,7 +356,7 @@ def list_policies() -> List:
         policies_v1.__name__,
         policies_v2.__name__,
         policies_v3.__name__,
-        policies_pineapples_zoom_in_5.__name__,
+        policies_pineapple.__name__,
     ]
 
 

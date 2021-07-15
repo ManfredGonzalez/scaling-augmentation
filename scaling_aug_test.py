@@ -121,7 +121,7 @@ class cocoDataset(torch.utils.data.Dataset):
 
 # -------------------------------------------------------------------------------#
 # A simple test using our coco dataset
-aug_policy = policies.policies_pineapples_zoom_in_5()
+aug_policy = policies.policies_pineapple('15_from_5')
 aug_policy_container = policies.PolicyContainer(aug_policy)
 #path to your own data and coco file
 train_data_dir = 'D:/Manfred/InvestigacionPinas/Beca-CENAT/workspace/5m_train_valid_test_vl/test'
