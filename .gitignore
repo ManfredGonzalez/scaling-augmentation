@@ -129,6 +129,6 @@ dmypy.json
 .idea/
 
 #files
-*.pth
+#*.pth
 #test directory
 /test
