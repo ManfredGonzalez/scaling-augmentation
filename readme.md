@@ -177,27 +177,6 @@ Check out this [tutorial](tutorial/train_shape.ipynb) if you are new to this. Yo
     python coco_eval.py -p your_project_name -c 5 \
      -w /path/to/your/weights
 
-### 7. Debug training (optional)
-
-    # when you get bad result, you need to debug the training result.
-    python train.py -c 2 -p your_project_name --batch_size 8 --lr 1e-3 --debug True
-    
-    # then checkout test/ folder, there you can visualize the predicted boxes during training
-    # don't panic if you see countless of error boxes, it happens when the training is at early stage.
-    # But if you still can't see a normal box after several epoches, not even one in all image,
-    # then it's possible that either the anchors config is inappropriate or the ground truth is corrupted.
-
 ## TODO
 
 - [X] re-implement efficientdet
-- [X] adapt anchor strategies
-- [X] mAP tests
-- [X] training-scripts
-- [X] efficientdet D6 support
-- [X] efficientdet D7 support
-- [X] efficientdet D7x support
-
-
-## Visual Comparison
-
-Conclusion: They are providing almost the same precision. Tips: set `force_input_size=1920`. Official repo uses original image size while this repo uses default network input size. If you try to compare these two repos, you must make sure the input size is consistent.
