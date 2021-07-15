@@ -12,6 +12,7 @@ Requirements:
 
 ## Install requirements
 
+    Python version 3.8
     pip install -U scikit-learn
     pip install pycocotools numpy opencv-python tqdm tensorboard tensorboardX pyyaml webcolors
     pip install torch==1.4.0
