@@ -129,13 +129,19 @@ class cocoDataset(torch.utils.data.Dataset):
 #           5_from_15
 #           8_from_15
 # these parameters refer to the scaling you can make for this specific problem of pineapples
+import torch
+torch.manual_seed(0)
+
 aug_policy = policies.policies_pineapple('15_from_5')
-aug_policy_container = policies.PolicyContainer(aug_policy)
+aug_policy_container = policies.PolicyContainer(aug_policy, random_state=42)
+
 #path to your own data and coco file
-train_data_dir = 'D:/Manfred/InvestigacionPinas/Beca-CENAT/workspace/5m_train_valid_test_vl/test'
-train_coco = 'D:/Manfred/InvestigacionPinas/Beca-CENAT/workspace/5m_train_valid_test_vl/annotations/instances_test.json'
+train_data_dir = 'datasets/apple_h1/test'
+train_coco = 'datasets/apple_h1/annotations/instances_test.json'
+
 # Batch size
 train_batch_size = 3
+
 # select device (whether GPU or CPU)
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -173,9 +179,9 @@ for idx in range(images.size()[0]):
     annotations = targets[targets[:,0]==idx] # get all the annotations using the image index
     if idx<train_batch_size:
         # the first half of the batch referring the original images
-        cv2.imwrite(f'D:/Manfred/InvestigacionPinas/Beca-CENAT/workspace/prueba_dataaugmentation/{imgs_names[idx]}', printROIS(annotations,image_numpy))
+        cv2.imwrite(f'datasets/apple_h1/results/{imgs_names[idx]}', printROIS(annotations,image_numpy))
     else:
         # the second half of the batch containing the augmented images
         img_name = imgs_names[idx][0:len(imgs_names[idx])-4]
-        cv2.imwrite(f'D:/Manfred/InvestigacionPinas/Beca-CENAT/workspace/prueba_dataaugmentation/{img_name}_aug.JPG', printROIS(annotations,image_numpy))
+        cv2.imwrite(f'datasets/apple_h1/results/{img_name}_aug.JPG', printROIS(annotations,image_numpy))
 

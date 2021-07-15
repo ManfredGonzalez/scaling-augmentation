@@ -331,7 +331,7 @@ if(True):
     input_path = 'datasets/yolo_format/apple_yolov4pytorch/'
     annotations_file = "_annotations.txt"
     classes_file = "_classes.txt"
-    project_name = "apple_b2"
+    project_name = "apple_h1"
     set_1 = "train"
     set_2 = "val"
     set_3 = "test" 
