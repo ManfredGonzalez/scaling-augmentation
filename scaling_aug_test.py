@@ -121,30 +121,35 @@ class cocoDataset(torch.utils.data.Dataset):
 
 # -------------------------------------------------------------------------------#
 # A simple test using our coco dataset
+# policies_pineapple only accepts the following parameters:
+#           15_from_5
+#           8_from_5
+#           5_from_8
+#           15_from_8
+#           5_from_15
+#           8_from_15
+# these parameters refer to the scaling you can make for this specific problem of pineapples
 aug_policy = policies.policies_pineapple('15_from_5')
 aug_policy_container = policies.PolicyContainer(aug_policy)
 #path to your own data and coco file
 train_data_dir = 'D:/Manfred/InvestigacionPinas/Beca-CENAT/workspace/5m_train_valid_test_vl/test'
 train_coco = 'D:/Manfred/InvestigacionPinas/Beca-CENAT/workspace/5m_train_valid_test_vl/annotations/instances_test.json'
+# Batch size
+train_batch_size = 3
+# select device (whether GPU or CPU)
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 # create own Dataset
 my_dataset = cocoDataset(root=train_data_dir,
                           annotation=train_coco, 
                           policy_container=aug_policy_container
                           )
-# Batch size
-train_batch_size = 3
-
 # own DataLoader
 data_loader = torch.utils.data.DataLoader(my_dataset,
                                           batch_size=train_batch_size,
                                           shuffle=True,
                                           num_workers=0,
                                           collate_fn=my_dataset.collate_fn)
-
-# select device (whether GPU or CPU)
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-
 
 tensor_to_image = transforms.ToPILImage()
 def printROIS(labelsTensor,imageToPrint):
