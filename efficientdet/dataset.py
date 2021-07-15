@@ -8,7 +8,7 @@ import cv2
 
 
 class CocoDataset(Dataset):
-    def __init__(self, root_dir, set='train2017', transform=None):
+    def __init__(self, root_dir, set='train2017', transform=None, policy_container=None):
 
         self.root_dir = root_dir
         self.set_name = set
@@ -18,6 +18,9 @@ class CocoDataset(Dataset):
         self.image_ids = self.coco.getImgIds()
 
         self.load_classes()
+        #-----------------
+        self.policy_container = policy_container
+        #-----------------
 
     def load_classes(self):
 
@@ -44,6 +47,33 @@ class CocoDataset(Dataset):
         sample = {'img': img, 'annot': annot}
         if self.transform:
             sample = self.transform(sample)
+        if self.policy_container:
+            # Select a random sub-policy from the policy list
+            random_policy = self.policy_container.select_random_policy()
+            #print(random_policy)
+
+            # Apply this augmentation to the image, returns the augmented image and bounding boxes
+            # The boxes must be at a pixel level. e.g. x_min, y_min, x_max, y_max with pixel values
+            '''img_aug, bbs_aug = self.policy_container.apply_augmentation(
+                random_policy,
+                img,
+                boxes,
+                labels,
+            )
+            labels = np.array(labels)
+            img = self.to_tensor(img) # Convert the image to a tensor
+            boxes = np.hstack((np.vstack(labels), np.array(boxes))) # Add the labels to the boxes
+            img_aug = self.to_tensor(img_aug) # Convert the augmented image to a tensor
+            bbs_aug= np.array(bbs_aug)
+            
+            # Only return the augmented image, bounded boxes if there are
+            # boxes present after the image augmentation and the image name without extension filename
+            
+            #---------------------------------------------
+            if bbs_aug.size > 0:
+                return img, boxes, img_aug, bbs_aug ,imgName
+            else:
+                return img, boxes, [], np.array([]), imgName'''
         return sample
 
     def load_image(self, image_index):
