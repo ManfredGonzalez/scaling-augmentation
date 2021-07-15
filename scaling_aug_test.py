@@ -9,10 +9,7 @@ from pycocotools.coco import COCO
 from torchvision import transforms
 from bbaug.policies import policies
 
-aug_policy = policies.policies_pineapples_zoom_in_5()
-aug_policy_container = policies.PolicyContainer(aug_policy)
-
-class myOwnDataset(torch.utils.data.Dataset):
+class cocoDataset(torch.utils.data.Dataset):
     def __init__(self, root, annotation, policy_container=None):
         self.root = root
         self.coco = COCO(annotation)
@@ -80,31 +77,6 @@ class myOwnDataset(torch.utils.data.Dataset):
             else:
                 return img, boxes, [], np.array([]), imgName
         return img, boxes, imgName
-        '''#boxes = torch.as_tensor(boxes, dtype=torch.float32)
-        # Labels (In my case, I only one class: target class or background)
-        #labels = torch.ones((num_objs,), dtype=torch.int64)
-        # Tensorise img_id
-        img_id = torch.tensor([img_id])
-        # Size of bbox (Rectangular)
-        areas = []
-        for i in range(num_objs):
-            areas.append(coco_annotation[i]['area'])
-        areas = torch.as_tensor(areas, dtype=torch.float32)
-        # Iscrowd
-        iscrowd = torch.zeros((num_objs,), dtype=torch.int64)
-
-        # Annotation is in dictionary format
-        my_annotation = {}
-        my_annotation["boxes"] = boxes
-        my_annotation["labels"] = labels
-        my_annotation["image_id"] = img_id
-        my_annotation["area"] = areas
-        my_annotation["iscrowd"] = iscrowd
-
-        if self.transforms is not None:
-            img = self.transforms(img)
-        
-        return img, my_annotation'''
 
     def collate_fn(self, batch):
         """
@@ -147,19 +119,16 @@ class myOwnDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.ids)
 
-def getAllBboxesFromSpecificImg(img_idx, targets):
-    annotations = []
-    for target in targets:
-        if target[0] == img_idx:
-            annotations.append([int(target[1].item()),int(target[2].item()),int(target[3].item()),int(target[4].item()),int(target[5].item())])
-        
-    return annotations
+# -------------------------------------------------------------------------------#
+# A simple test using our coco dataset
+aug_policy = policies.policies_pineapples_zoom_in_5()
+aug_policy_container = policies.PolicyContainer(aug_policy)
 #path to your own data and coco file
 train_data_dir = 'D:/Manfred/InvestigacionPinas/Beca-CENAT/workspace/5m_train_valid_test_vl/test'
 train_coco = 'D:/Manfred/InvestigacionPinas/Beca-CENAT/workspace/5m_train_valid_test_vl/annotations/instances_test.json'
 
 # create own Dataset
-my_dataset = myOwnDataset(root=train_data_dir,
+my_dataset = cocoDataset(root=train_data_dir,
                           annotation=train_coco, 
                           policy_container=aug_policy_container
                           )
@@ -176,13 +145,6 @@ data_loader = torch.utils.data.DataLoader(my_dataset,
 # select device (whether GPU or CPU)
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-# DataLoader is iterable over Dataset
-'''for batch in data_loader:
-    images, imgs_names, targets = batch
-    annotations = getAllBboxesFromSpecificImg(0, targets)
-    print(images.size())
-    print(len(annotations))
-    #print(annotations)'''
 
 tensor_to_image = transforms.ToPILImage()
 def printROIS(labelsTensor,imageToPrint):
@@ -192,14 +154,23 @@ def printROIS(labelsTensor,imageToPrint):
     cv2.rectangle(imageToPrint, left_top, right_bottom, (255, 0, 0), 2)
   return imageToPrint
 
+# get all the images and annotations of a single batch
 images, imgs_names, targets = next(iter(data_loader))
+# the image names list just contains the names of the original images
+# duplicate the image names list since all the original images are located 
+# at the first half of the batch and the augmented images are at the other half
 imgs_names = imgs_names + imgs_names
 for idx in range(images.size()[0]):
+    # convert the tensor image to a numpy array
     image_numpy = np.asarray(tensor_to_image(images[idx]))
-    annotations = targets[targets[:,0]==idx]
+    # get all the annotations of the image
+    # all the annotations contains the image index at the first axis of the tensor
+    annotations = targets[targets[:,0]==idx] # get all the annotations using the image index
     if idx<train_batch_size:
+        # the first half of the batch referring the original images
         cv2.imwrite(f'D:/Manfred/InvestigacionPinas/Beca-CENAT/workspace/prueba_dataaugmentation/{imgs_names[idx]}', printROIS(annotations,image_numpy))
     else:
+        # the second half of the batch containing the augmented images
         img_name = imgs_names[idx][0:len(imgs_names[idx])-4]
         cv2.imwrite(f'D:/Manfred/InvestigacionPinas/Beca-CENAT/workspace/prueba_dataaugmentation/{img_name}_aug.JPG', printROIS(annotations,image_numpy))
 
