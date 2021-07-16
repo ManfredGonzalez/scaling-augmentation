@@ -1,7 +1,7 @@
 # Size Does Matter:
 ## The Importance of Scaling when Dealing with Limited Data in Object Detection
 
-Our own version of [EfficientDet](https://github.com/google/automl/tree/master/efficientdet) for our research about the importance of size when dealing with homogeneous bounding box sizes (EfficientDet paper: <https://arxiv.org/abs/1911.09070>). The base model was taken from <https://github.com/zylo117/Yet-Another-EfficientDet-Pytorch> and the bounding box augmentation was based on <https://github.com/harpalsahota/bbaug>.
+Our own version of [EfficientDet](https://github.com/google/automl/tree/master/efficientdet) for our research about the importance of size when dealing with homogeneous bounding box sizes (EfficientDet paper: <https://arxiv.org/abs/1911.09070>). This package builds on top of [this](https://github.com/zylo117/Yet-Another-EfficientDet-Pytorch) excellent EfficientDet PyTorch implementation and the augmentation on the excellent [bbaug](https://github.com/harpalsahota/bbaug) library.
 
 Requirements:
 
