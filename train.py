@@ -66,7 +66,7 @@ def train(opt):
                                transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
                                                              #Augmenter(),
                                                              Resizer(input_sizes[opt.compound_coef])]),
-                                policy_container = aug_policy_container)
+                                policy_container = None)
     training_generator = DataLoader(training_set, 
                                     batch_size= opt.batch_size,
                                     shuffle= True,
