@@ -78,7 +78,7 @@ def train(opt):
                           transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
                                                         Resizer(input_sizes[opt.compound_coef])]))
     val_generator = DataLoader(val_set, 
-                                batch_size= opt.batch_size,
+                                batch_size= opt.batch_size, 
                                 shuffle= False,
                                 drop_last= True,
                                 collate_fn= val_set.collater,

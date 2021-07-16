@@ -146,7 +146,7 @@ class CocoDataset(Dataset):
             # Stack the unaugmented and augmented images together
             imgs = torch.stack(imgs)
 
-            # Add padding
+            # Add padding 
             annots = [an if len(list(an.shape)) != 1 else an.unsqueeze(dim=0) for an in annots]
             max_num_annots = max(annot.shape[0] for annot in annots) 
             if max_num_annots > 0:
