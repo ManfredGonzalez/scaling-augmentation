@@ -17,52 +17,10 @@ from torchvision import transforms
 from tqdm.autonotebook import tqdm
 
 from backbone import EfficientDetBackbone
-from efficientdet.dataset import CocoDataset, Resizer, Normalizer, Augmenter, collater
+from efficientdet.dataset import CocoDataset, Resizer, Normalizer, Augmenter#, collater
 from efficientdet.loss import FocalLoss
 from utils.sync_batchnorm import patch_replication_callback
 from utils.utils import replace_w_sync_bn, CustomDataParallel, get_last_weights, init_weights, boolean_string
-
-
-class Params:
-    def __init__(self, project_file):
-        self.params = yaml.safe_load(open(project_file).read())
-
-    def __getattr__(self, item):
-        return self.params.get(item, None)
-
-
-def get_args():
-    parser = argparse.ArgumentParser('Yet Another EfficientDet Pytorch: SOTA object detection network - Zylo117')
-    parser.add_argument('-p', '--project', type=str, default='coco', help='project file that contains parameters')
-    parser.add_argument('-c', '--compound_coef', type=int, default=0, help='coefficients of efficientdet')
-    parser.add_argument('-n', '--num_workers', type=int, default=12, help='num_workers of dataloader')
-    parser.add_argument('--batch_size', type=int, default=12, help='The number of images per batch among all devices')
-    parser.add_argument('--head_only', type=boolean_string, default=False,
-                        help='whether finetunes only the regressor and the classifier, '
-                             'useful in early stage convergence or small/easy dataset')
-    parser.add_argument('--lr', type=float, default=1e-4)
-    parser.add_argument('--optim', type=str, default='adamw', help='select optimizer for training, '
-                                                                   'suggest using \'admaw\' until the'
-                                                                   ' very final stage then switch to \'sgd\'')
-    parser.add_argument('--num_epochs', type=int, default=500)
-    parser.add_argument('--val_interval', type=int, default=1, help='Number of epoches between valing phases')
-    parser.add_argument('--save_interval', type=int, default=500, help='Number of steps between saving')
-    parser.add_argument('--es_min_delta', type=float, default=0.0,
-                        help='Early stopping\'s parameter: minimum change loss to qualify as an improvement')
-    parser.add_argument('--es_patience', type=int, default=0,
-                        help='Early stopping\'s parameter: number of epochs with no improvement after which training will be stopped. Set to 0 to disable this technique.')
-    parser.add_argument('--data_path', type=str, default='datasets/', help='the root folder of dataset')
-    parser.add_argument('--log_path', type=str, default='logs/')
-    parser.add_argument('-w', '--load_weights', type=str, default=None,
-                        help='whether to load weights from a checkpoint, set None to initialize, set \'last\' to load last checkpoint')
-    parser.add_argument('--saved_path', type=str, default='logs/')
-    parser.add_argument('--debug', type=boolean_string, default=False,
-                        help='whether visualize the predicted boxes of training, '
-                             'the output images will be in test/')
-
-    args = parser.parse_args()
-    return args
-
 
 
 class ModelWithLoss(nn.Module):
@@ -97,31 +55,30 @@ def train(opt):
     opt.log_path = opt.log_path + f'/{params.project_name}/tensorboard/'
     os.makedirs(opt.log_path, exist_ok=True)
     os.makedirs(opt.saved_path, exist_ok=True)
-
-    training_params = {'batch_size': opt.batch_size,
-                       'shuffle': True,
-                       'drop_last': True,
-                       'collate_fn': collater,
-                       'num_workers': opt.num_workers}
-
-    val_params = {'batch_size': opt.batch_size,
-                  'shuffle': False,
-                  'drop_last': True,
-                  'collate_fn': collater,
-                  'num_workers': opt.num_workers}
+    #training_params = {}
+    #val_params = {}
 
     input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1356] # these are the standard sizes
-    #input_sizes = [1300, 1300, 1300, 1300, 1300, 1300, 1300, 1300, 1300] # the experimental sizes
     training_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), set=params.train_set,
                                transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
-                                                             Augmenter(),
+                                                             #Augmenter(),
                                                              Resizer(input_sizes[opt.compound_coef])]))
-    training_generator = DataLoader(training_set, **training_params)
+    training_generator = DataLoader(training_set, 
+                                    'batch_size': opt.batch_size,
+                                    'shuffle': True,
+                                    'drop_last': True,
+                                    'collate_fn': training_set.collater,
+                                    'num_workers': opt.num_workers)
 
     val_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), set=params.val_set,
                           transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
                                                         Resizer(input_sizes[opt.compound_coef])]))
-    val_generator = DataLoader(val_set, **val_params)
+    val_generator = DataLoader(val_set, 
+                                'batch_size': opt.batch_size,
+                                'shuffle': False,
+                                'drop_last': True,
+                                'collate_fn': val_set.collater,
+                                'num_workers': opt.num_workers)
 
     model = EfficientDetBackbone(num_classes=len(params.obj_list), compound_coef=opt.compound_coef,
                                  ratios=eval(params.anchors_ratios), scales=eval(params.anchors_scales))
@@ -326,6 +283,50 @@ def save_checkpoint(model, name):
         torch.save(model.model.state_dict(), os.path.join(opt.saved_path, name))
 
 
+
+
+#--------------------------------------------------------------------------------------------------------------------
+class Params:
+    def __init__(self, project_file):
+        self.params = yaml.safe_load(open(project_file).read())
+
+    def __getattr__(self, item):
+        return self.params.get(item, None)
+
+
+def get_args():
+    parser = argparse.ArgumentParser('Yet Another EfficientDet Pytorch: SOTA object detection network - Zylo117')
+    parser.add_argument('-p', '--project', type=str, default='coco', help='project file that contains parameters')
+    parser.add_argument('-c', '--compound_coef', type=int, default=0, help='coefficients of efficientdet')
+    parser.add_argument('-n', '--num_workers', type=int, default=12, help='num_workers of dataloader')
+    parser.add_argument('--batch_size', type=int, default=12, help='The number of images per batch among all devices')
+    parser.add_argument('--head_only', type=boolean_string, default=False,
+                        help='whether finetunes only the regressor and the classifier, '
+                             'useful in early stage convergence or small/easy dataset')
+    parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--optim', type=str, default='adamw', help='select optimizer for training, '
+                                                                   'suggest using \'admaw\' until the'
+                                                                   ' very final stage then switch to \'sgd\'')
+    parser.add_argument('--num_epochs', type=int, default=500)
+    parser.add_argument('--val_interval', type=int, default=1, help='Number of epoches between valing phases')
+    parser.add_argument('--save_interval', type=int, default=500, help='Number of steps between saving')
+    parser.add_argument('--es_min_delta', type=float, default=0.0,
+                        help='Early stopping\'s parameter: minimum change loss to qualify as an improvement')
+    parser.add_argument('--es_patience', type=int, default=0,
+                        help='Early stopping\'s parameter: number of epochs with no improvement after which training will be stopped. Set to 0 to disable this technique.')
+    parser.add_argument('--data_path', type=str, default='datasets/', help='the root folder of dataset')
+    parser.add_argument('--log_path', type=str, default='logs/')
+    parser.add_argument('-w', '--load_weights', type=str, default=None,
+                        help='whether to load weights from a checkpoint, set None to initialize, set \'last\' to load last checkpoint')
+    parser.add_argument('--saved_path', type=str, default='logs/')
+    parser.add_argument('--debug', type=boolean_string, default=False,
+                        help='whether visualize the predicted boxes of training, '
+                             'the output images will be in test/')
+
+    args = parser.parse_args()
+    return args
+
+
 #LIMIT THE NUMBER OF CPU TO PROCESS THE JOB
 def throttle_cpu(cpu_list):
     p = psutil.Process()
@@ -335,7 +336,7 @@ def throttle_cpu(cpu_list):
 
 
 if __name__ == '__main__':
-    #throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39]) 
+    throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39]) 
 
     opt = get_args()
     train(opt)

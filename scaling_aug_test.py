@@ -76,7 +76,9 @@ class cocoDataset(torch.utils.data.Dataset):
                 return img, boxes, img_aug, bbs_aug ,imgName
             else:
                 return img, boxes, [], np.array([]), imgName
-        return img, boxes, imgName
+
+        else:      
+            return self.to_tensor(img), np.array(boxes), imgName
 
     def collate_fn(self, batch):
         """
@@ -115,7 +117,11 @@ class cocoDataset(torch.utils.data.Dataset):
             #---------------------------------------------
             return imgs, imgs_names, targets
             #---------------------------------------------
-    
+        else:
+            imgs, targets, imgs_names = list(zip(*batch))
+            return imgs, imgs_names, targets
+
+
     def __len__(self):
         return len(self.ids)
 
