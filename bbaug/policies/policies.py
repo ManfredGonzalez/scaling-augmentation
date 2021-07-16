@@ -329,7 +329,7 @@ def policies_pineapple(scaling):
     :return: List of policies
     """
     if scaling == '15_from_5':
-        policy = [[POLICY_TUPLE('Zoom_Scale', 0.0, 0.33333) ],]
+        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 0.33333) ],]
     elif scaling == '8_from_5':
         policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 0.625) ],]
     elif scaling == '5_from_8':
