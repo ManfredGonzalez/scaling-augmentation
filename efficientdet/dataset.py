@@ -147,7 +147,7 @@ class CocoDataset(Dataset):
             imgs = torch.stack(imgs)
 
             # Add padding
-            #annots = [an if len(list(an.shape)) == 1 else an.unsqueeze(dim=0) for an in annots]
+            annots = [an if len(list(an.shape)) != 1 else an.unsqueeze(dim=0) for an in annots]
             max_num_annots = max(annot.shape[0] for annot in annots) 
             if max_num_annots > 0:
                 annot_padded = torch.ones((len(annots), max_num_annots, 5)) * -1
@@ -168,7 +168,7 @@ class CocoDataset(Dataset):
             annots = [i for i in annots]
             imgs_names = [i for i in imgs_names]
 
-            #annots = [an if len(list(an.shape)) != 1 else an.unsqueeze(dim=0) for an in annots]
+            annots = [an if len(list(an.shape)) != 1 else an.unsqueeze(dim=0) for an in annots]
             max_num_annots = max(annot.shape[0] for annot in annots)
 
             if max_num_annots > 0:
