@@ -4,6 +4,7 @@ import numpy as np
 
 from torch.utils.data import Dataset, DataLoader
 from pycocotools.coco import COCO
+from torchvision import transforms
 import cv2
 
 
@@ -55,7 +56,7 @@ class CocoDataset(Dataset):
         ann_ids = self.coco.getAnnIds(imgIds=self.image_ids[image_index], iscrowd=False)
 
         # Dictionary: target coco_annotation file for an image
-        coco_annotation = coco.loadAnns(ann_ids)
+        coco_annotation = self.coco.loadAnns(ann_ids)
 
         # Bounding boxes for objects
         # In coco format, bbox = [xmin, ymin, width, height]
@@ -93,6 +94,7 @@ class CocoDataset(Dataset):
             boxes = np.hstack(( np.array(boxes), np.vstack(labels) )) # Add the labels to the boxes
             #img_aug = self.to_tensor(img_aug) # Convert the augmented image to a tensor
             bbs_aug = np.array(bbs_aug)
+            bbs_aug = bbs_aug[:, [1,2,3,4,0]].astype(np.float32) # send category to the end of the row 
 
             sample_original = {'img': img, 'annot': boxes}
             sample_augmented = {'img': img_aug, 'annot': bbs_aug}
@@ -106,10 +108,10 @@ class CocoDataset(Dataset):
             # Only return the augmented image, bounded boxes if there are
             # boxes present after the image augmentation and the image name without extension filename
             #---------------------------------------------
-            if bbs_aug_t.size > 0:
-                return img_t, boxes_t, img_aug_t, bbs_aug_t, imgName
+            if bbs_aug_t.numel() > 0:
+                return img_t, boxes_t.squeeze(), imgName, img_aug_t, bbs_aug_t.squeeze(), "aug_" + imgName
             else:
-                return img_t, boxes_t, [], np.array([]), imgName
+                return img_t, boxes_t.squeeze(), imgName, torch.tensor([]), torch.tensor([]), ""
 
 
         # No augmentation
@@ -118,13 +120,15 @@ class CocoDataset(Dataset):
             sample = {'img': img, 'annot': boxes}
             if self.transform:
                 sample = self.transform(sample)
-            return img, np.array(boxes), imgName
+            img_, boxes_ = sample['img'], sample['annot']
+            return img_, boxes_.squeeze(), imgName
         
 
-    def collater(data):
+    def collater(self, batch):
+
         if self.policy_container:
             #---------------------------------------------
-            imgs, annots, imgs_aug, annots_aug, imgs_names = list(zip(*batch))
+            imgs, annots, imgs_names, imgs_aug, annots_aug, imgs_names_aug = list(zip(*batch))
             #---------------------------------------------
 
             # Create the image and target list for the unaugmented data
@@ -134,15 +138,17 @@ class CocoDataset(Dataset):
             
             # Only add the augmented images and annots if there are annots
             for i, box_aug in enumerate(annots_aug):
-                if box_aug.size > 0:
+                if box_aug.numel() > 0:
                     imgs.append(imgs_aug[i])
                     annots.append(box_aug)
+                    imgs_names.append(imgs_names_aug[i])
 
             # Stack the unaugmented and augmented images together
             imgs = torch.stack(imgs)
 
             # Add padding
-            # max_num_annots = max(annot.shape[0] for annot in annots) 
+            #annots = [an if len(list(an.shape)) == 1 else an.unsqueeze(dim=0) for an in annots]
+            max_num_annots = max(annot.shape[0] for annot in annots) 
             if max_num_annots > 0:
                 annot_padded = torch.ones((len(annots), max_num_annots, 5)) * -1
                 for idx, annot in enumerate(annots):
@@ -151,19 +157,18 @@ class CocoDataset(Dataset):
             else:
                 annot_padded = torch.ones((len(annots), 1, 5)) * -1
 
-            #create the final tensor
-            annots = torch.cat(annots, 0)
-
-            return {'img': imgs, 'annot': annot_padded, 'img_names': img_names}
+            return {'img': imgs, 'annot': annot_padded, 'img_names': imgs_names}
 
 
         # No augmentation
         else:
             imgs, annots, imgs_names = list(zip(*batch))
-            #imgs = [s['img'] for s in data]
-            #annots = [s['annot'] for s in data]
-            #imgs = torch.from_numpy(np.stack(imgs, axis=0))
 
+            imgs = [i for i in imgs]
+            annots = [i for i in annots]
+            imgs_names = [i for i in imgs_names]
+
+            #annots = [an if len(list(an.shape)) != 1 else an.unsqueeze(dim=0) for an in annots]
             max_num_annots = max(annot.shape[0] for annot in annots)
 
             if max_num_annots > 0:
@@ -175,8 +180,9 @@ class CocoDataset(Dataset):
             else:
                 annot_padded = torch.ones((len(annots), 1, 5)) * -1
 
-            #imgs = imgs.permute(0, 3, 1, 2)
-            return {'img': imgs, 'annot': annot_padded, 'img_names': img_names}
+            imgs = torch.stack(imgs)
+            return {'img': imgs, 'annot': annot_padded, 'img_names': imgs_names}
+        
 
 
 class Resizer(object):
@@ -184,6 +190,7 @@ class Resizer(object):
     
     def __init__(self, img_size=512):
         self.img_size = img_size
+        self.to_tensor = transforms.ToTensor()
 
     def __call__(self, sample):
         image, annots = sample['img'], sample['annot']
