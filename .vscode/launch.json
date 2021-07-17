@@ -17,7 +17,9 @@
                     "--lr", "1e-3", 
                     "--load_weights", "weights/efficientdet-d0.pth", 
                     "--num_epochs", "5", 
-                    "--es_patience", "300"]
+                    "--es_patience", "300",
+                    "--use_seed", "True", 
+                    "--seed_values", "42"]
         }
     ]
 }
