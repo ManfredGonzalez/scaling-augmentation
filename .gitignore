@@ -132,4 +132,4 @@ dmypy.json
 #*.pth
 #test directory
 /test
-/log
+/logs
