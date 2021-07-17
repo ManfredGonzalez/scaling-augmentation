@@ -323,11 +323,11 @@ def create_project_file(project_name, output_project_file, train_, val_, test_, 
         my_file.write('std: [0.229, 0.224, 0.225]\n')
         my_file.write("anchors_scales: '[2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)]'\n")
         my_file.write("anchors_ratios: '[(1.0, 1.0), (1.4, 0.7), (0.7, 1.4)]'\n")
-        my_file.write(f'obj_list: {obj_list}')
+        my_file.write(f'obj_list: {obj_list}\n')
 
 
 
-if(True):
+if(False):
     input_path = 'datasets/yolo_format/apple_yolov4pytorch/'
     annotations_file = "_annotations.txt"
     classes_file = "_classes.txt"
