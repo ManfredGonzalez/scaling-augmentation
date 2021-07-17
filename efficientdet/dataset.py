@@ -4,12 +4,21 @@ import numpy as np
 
 from torch.utils.data import Dataset, DataLoader
 from pycocotools.coco import COCO
+from torchvision import transforms
 import cv2
 
 
 class CocoDataset(Dataset):
     def __init__(self, root_dir, set='train2017', transform=None, policy_container=None):
+        '''
+        Definition of the Dataset, policies and transformation to be used.
 
+        params
+        :root_dir (string): root location of the dataset.
+        :set (string): name of the dataset - this name must match the physical folder.
+        :transform (torchvision.transforms.Compose): sequence of transformations to apply to the data.
+        :policy_container (bbaug.policies): set of policies from where one will be chosen to be applied.
+        '''
         self.root_dir = root_dir
         self.set_name = set
         self.transform = transform
@@ -23,8 +32,17 @@ class CocoDataset(Dataset):
         self.to_tensor = transforms.ToTensor()
         #-----------------
 
-    def load_classes(self):
 
+    def load_classes(self):
+        '''
+        Load classes/categories from the dataset. Load the results to self-inner-class variables.
+
+        params
+        :None
+
+        return
+        :None
+        '''
         # load class names (name -> label)
         categories = self.coco.loadCats(self.coco.getCatIds())
         categories.sort(key=lambda x: x['id'])
@@ -38,24 +56,49 @@ class CocoDataset(Dataset):
         for key, value in self.classes.items():
             self.labels[value] = key
 
+
     def __len__(self):
+        '''
+        Get the total number of images in the dataset.
+        
+        return
+        :int -> total number of images.
+        '''
         return len(self.image_ids)
 
-    def __getitem__(self, image_index):
 
-        #img = self.load_image(idx)
+    def __getitem__(self, image_index):
+        '''
+        Get the specified item from the dataset.
+
+        params
+        :image_index (int) -> id of the image (corresponding to the json file).
+
+        return <if there is a policy>
+        :img (torch.tensor) -> image already normalized.
+        :boxes (torch.tensor) -> annotations. Shape -> [batch , bounding_boxes , 5]. 5 -> first 4 for the coordinates and the final position for the category.
+        :imgName (string) -> original name of the image.
+        :img_aug (torch.tensor) -> augmented image (resulting image from the library bbaug).
+        :bbs_aug (torch.tensor) -> annotations. Shape -> [batch , bounding_boxes , 5]. 5 -> first 4 for the coordinates and the final position for the category.
+        :imgName_aug (string) -> name of the augmented image (same name of the original but with 'aug_' added at the beginning).
+
+        return <if there is NO policy>
+        :img (torch.tensor) -> image already normalized.
+        :boxes (torch.tensor) -> annotations. Shape -> [batch , bounding_boxes , 5]. 5 -> first 4 for the coordinates and the final position for the category.
+        :imgName (string) -> original name of the image.
+        '''
+
+        # get the name and read the image
         imgName = self.coco.loadImgs(self.image_ids[image_index])[0]['file_name']
         img = cv2.imread(os.path.join(self.root_dir, self.set_name, imgName))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        #img = img.astype(np.float32) / 255.  ### WHAT ABOUT THIS? *******************
+        #img = img.astype(np.float32) / 255.
 
-
-        #-----------------------------------
         # List: get annotation id from coco
         ann_ids = self.coco.getAnnIds(imgIds=self.image_ids[image_index], iscrowd=False)
 
         # Dictionary: target coco_annotation file for an image
-        coco_annotation = coco.loadAnns(ann_ids)
+        coco_annotation = self.coco.loadAnns(ann_ids)
 
         # Bounding boxes for objects
         # In coco format, bbox = [xmin, ymin, width, height]
@@ -71,10 +114,7 @@ class CocoDataset(Dataset):
             boxes.append([xmin, ymin, xmax, ymax])
             labels.append(int(label))
         
-
-        #sample = {'img': img, 'annot': annot}   ### WHAT ABOUT THIS? *******************
-        
-
+        # Apply augmentation
         if self.policy_container:
             # Select a random sub-policy from the policy list
             random_policy = self.policy_container.select_random_policy()
@@ -88,61 +128,85 @@ class CocoDataset(Dataset):
                 labels,
             )
 
+            # Add the labels to the boxes
             labels = np.array(labels)
-            #img = self.to_tensor(img) # Convert the image to a tensor
-            boxes = np.hstack(( np.array(boxes), np.vstack(labels) )) # Add the labels to the boxes
-            #img_aug = self.to_tensor(img_aug) # Convert the augmented image to a tensor
-            bbs_aug = np.array(bbs_aug)
+            boxes = np.hstack(( np.array(boxes), np.vstack(labels) )) 
 
+            # Format correction from the augmentation: send category to the end of the row 
+            bbs_aug = np.array(bbs_aug)
+            bbs_aug = bbs_aug[:, [1,2,3,4,0]].astype(np.float32) 
+
+            # create dictionary to apply the transformation 
             sample_original = {'img': img, 'annot': boxes}
             sample_augmented = {'img': img_aug, 'annot': bbs_aug}
             if self.transform:
                 sample_original = self.transform(sample_original)
                 sample_augmented = self.transform(sample_augmented)
 
+            # get the data from the resulting dictionary
             img_t, boxes_t = sample_original['img'], sample_original['annot']
             img_aug_t, bbs_aug_t = sample_augmented['img'], sample_augmented['annot']
 
-            # Only return the augmented image, bounded boxes if there are
-            # boxes present after the image augmentation and the image name without extension filename
-            #---------------------------------------------
-            if bbs_aug_t.size > 0:
-                return img_t, boxes_t, img_aug_t, bbs_aug_t, imgName
+            # it may happen that the transformation removes all bounding boxes
+            if bbs_aug_t.numel() > 0:
+                return img_t, boxes_t.squeeze(), imgName, img_aug_t, bbs_aug_t.squeeze(), "aug_" + imgName
             else:
-                return img_t, boxes_t, [], np.array([]), imgName
+                return img_t, boxes_t.squeeze(), imgName, torch.tensor([]), torch.tensor([]), ""
 
 
-        # No augmentation
+        # No augmentation at all
         else:
+            # locate the category at the end
             boxes = np.hstack(( np.array(boxes), np.vstack(labels) ))
+
+            #create a temporal dictionary to apply the transformations
             sample = {'img': img, 'annot': boxes}
             if self.transform:
                 sample = self.transform(sample)
-            return img, np.array(boxes), imgName
+
+            # recover the data and return
+            img_, boxes_ = sample['img'], sample['annot']
+            return img_, boxes_.squeeze(), imgName
         
 
-    def collater(data):
-        if self.policy_container:
-            #---------------------------------------------
-            imgs, annots, imgs_aug, annots_aug, imgs_names = list(zip(*batch))
-            #---------------------------------------------
+    def collater(self, batch):
+        '''
+        Collater function. In case that an augmentation was applied, we have to concatenate everything in tensors.
 
-            # Create the image and target list for the unaugmented data
+        params
+        :batch (tuple) -> tuple with all the data in the form of tensors.
+
+        return
+        :dictionary -> {images: torch.tensor, annotations: torch.tensor, image_names: list(string)}
+        '''
+        if self.policy_container:
+            # get data from the batch
+            imgs, annots, imgs_names, imgs_aug, annots_aug, imgs_names_aug = list(zip(*batch))
+
+            # create list from the unaugmented data
             imgs = [i for i in imgs]
             annots = [i for i in annots]
             imgs_names = [i for i in imgs_names]
             
-            # Only add the augmented images and annots if there are annots
+            # add augmented data if there are bounding boxes
             for i, box_aug in enumerate(annots_aug):
-                if box_aug.size > 0:
+                if box_aug.numel() > 0:
                     imgs.append(imgs_aug[i])
                     annots.append(box_aug)
+                    imgs_names.append(imgs_names_aug[i])
 
-            # Stack the unaugmented and augmented images together
+            # convert list to tensor
             imgs = torch.stack(imgs)
 
-            # Add padding
-            # max_num_annots = max(annot.shape[0] for annot in annots) 
+
+            # Add padding to the annotations
+            #-------------------------------
+            # sometimes when there is only one bounding box, the dimension of the annotation is incorrect. E.g. torch.tensor([5]) instead of torch.tensor([1,5])
+            annots = [an if len(list(an.shape)) != 1 else an.unsqueeze(dim=0) for an in annots]
+
+            # ask for the image that has more bounding boxes and add padding to the rest of the bounding boxes
+            # Why? because the format in which the loss functions needs the data. So, all annotations will have the same dimension filled with -1s.
+            max_num_annots = max(annot.shape[0] for annot in annots) 
             if max_num_annots > 0:
                 annot_padded = torch.ones((len(annots), max_num_annots, 5)) * -1
                 for idx, annot in enumerate(annots):
@@ -150,20 +214,27 @@ class CocoDataset(Dataset):
                         annot_padded[idx, :annot.shape[0], :] = annot
             else:
                 annot_padded = torch.ones((len(annots), 1, 5)) * -1
+            #-------------------------------
 
-            #create the final tensor
-            annots = torch.cat(annots, 0)
-
-            return {'img': imgs, 'annot': annot_padded, 'img_names': img_names}
+            # return a dictionary
+            return {'img': imgs, 'annot': annot_padded, 'img_names': imgs_names}
 
 
-        # No augmentation
+        # No augmentation at all
         else:
+            # get data from the batch
             imgs, annots, imgs_names = list(zip(*batch))
-            #imgs = [s['img'] for s in data]
-            #annots = [s['annot'] for s in data]
-            #imgs = torch.from_numpy(np.stack(imgs, axis=0))
 
+            # create list from the unaugmented data
+            imgs = [i for i in imgs]
+            imgs = torch.stack(imgs)
+            annots = [i for i in annots]
+            imgs_names = [i for i in imgs_names]
+
+            # Add padding to the annotations
+            #-------------------------------
+            # sometimes when there is only one bounding box, the dimension of the annotation is incorrect. E.g. torch.tensor([5]) instead of torch.tensor([1,5])
+            annots = [an if len(list(an.shape)) != 1 else an.unsqueeze(dim=0) for an in annots]
             max_num_annots = max(annot.shape[0] for annot in annots)
 
             if max_num_annots > 0:
@@ -174,19 +245,39 @@ class CocoDataset(Dataset):
                         annot_padded[idx, :annot.shape[0], :] = annot
             else:
                 annot_padded = torch.ones((len(annots), 1, 5)) * -1
+            #-------------------------------
 
-            #imgs = imgs.permute(0, 3, 1, 2)
-            return {'img': imgs, 'annot': annot_padded, 'img_names': img_names}
+            # return a dictionary
+            return {'img': imgs, 'annot': annot_padded, 'img_names': imgs_names}
+        
 
 
 class Resizer(object):
-    """Convert ndarrays in sample to Tensors."""
+    """Convert ndarrays in sample to Tensors AND apply resizing to the image and annotations."""
     
     def __init__(self, img_size=512):
+        '''
+        Resizing the image into a fixed value.
+
+        params
+        :img_size (int) -> size of the output image.
+        '''
         self.img_size = img_size
+        self.to_tensor = transforms.ToTensor()
 
     def __call__(self, sample):
+        '''
+        Method that will be executed when the transformation is called.
+
+        params
+        :sample (dict{numpy, numpy}) -> dictionary with the image and the annotations. Format -> {'img': numpy, 'annot': numpy}
+
+        return
+        :dictionary{torch.tensor, torch.tensor}, same format as the input. Format -> {'img': torch.tensor, 'annot': torch.tensor}
+        '''
         image, annots = sample['img'], sample['annot']
+
+        # we try to preserve the ration of the image
         height, width, _ = image.shape
         if height > width:
             scale = self.img_size / height
@@ -197,17 +288,47 @@ class Resizer(object):
             resized_height = int(height * scale)
             resized_width = self.img_size
 
+        # resize the image using cv2 and an interpolation
         image = cv2.resize(image, (resized_width, resized_height), interpolation=cv2.INTER_LINEAR)
 
+        # add zero-padding if necessary
         new_image = np.zeros((self.img_size, self.img_size, 3))
         new_image[0:resized_height, 0:resized_width] = image
 
+        # scale the bounding boxes
         annots[:, :4] *= scale
 
-        #return {'img': self.to_tensor(new_image).to(torch.float32), 'annot': self.to_tensor(annots), 'scale': scale}
         return {'img': self.to_tensor(new_image).to(torch.float32), 'annot': self.to_tensor(annots)}
 
+
+
+class Normalizer(object):
+    """Normalization of the data."""
+
+    def __init__(self, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
+        '''
+        Normalization using fixed values.
+
+        params
+        :mean (float list) -> mean values of the channels.
+        :std (float list) -> standard deviation values of the channels.
+        '''
+        self.mean = np.array([[mean]])
+        self.std = np.array([[std]])
+
+    def __call__(self, sample):
+        '''
+        Apply normalization when the transformation is called.
+
+        params
+        :sample (dict) -> dictionary with the array containing the image and the annotations. Format -> {'img': img, 'annot': boxes}
+        '''
+        image, annots = sample['img'], sample['annot']
+        return {'img': ((image.astype(np.float32) - self.mean) / self.std), 'annot': annots}
+
+
 '''
+#THIS CLASS WAS REMOVED IN ORDER TO USE THE POLICY AUGMENTATIONS.
 class Augmenter(object):
     """Convert ndarrays in sample to Tensors."""
 
@@ -230,15 +351,3 @@ class Augmenter(object):
 
         return sample
 '''
-
-
-class Normalizer(object):
-
-    def __init__(self, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
-        self.mean = np.array([[mean]])
-        self.std = np.array([[std]])
-
-    def __call__(self, sample):
-        image, annots = sample['img'], sample['annot']
-
-        return {'img': ((image.astype(np.float32) - self.mean) / self.std), 'annot': annots}
