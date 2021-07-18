@@ -1,3 +1,4 @@
+import sys
 import torch
 from collections import Counter
 
@@ -25,7 +26,7 @@ def mean_average_precision(
     # used for numerical stability later on
     epsilon = 1e-6
 
-    for c in range(num_classes):
+    for c in range(num_classes+1):
         detections = []
         ground_truths = []
 
@@ -99,11 +100,14 @@ def mean_average_precision(
 
         TP_cumsum = torch.cumsum(TP, dim=0)
         FP_cumsum = torch.cumsum(FP, dim=0)
-        recalls = TP_cumsum / (total_true_bboxes + epsilon)
-        precisions = TP_cumsum / (TP_cumsum + FP_cumsum + epsilon)
-        precisions = torch.cat((torch.tensor([1]), precisions))
-        recalls = torch.cat((torch.tensor([0]), recalls))
+        recalls_raw = TP_cumsum / (total_true_bboxes + epsilon)
+        precisions_raw = TP_cumsum / (TP_cumsum + FP_cumsum + epsilon)
+        precisions = torch.cat((torch.tensor([1]), precisions_raw))
+        recalls = torch.cat((torch.tensor([0]), recalls_raw))
         # torch.trapz for numerical integration
         average_precisions.append(torch.trapz(precisions, recalls))
 
-    return sum(average_precisions) / len(average_precisions)
+
+    print(recalls_raw.size())
+    print(recalls_raw.size()[0])
+    return (recalls_raw[recalls_raw.size()[0]-1],precisions_raw[precisions_raw.size()[0]-1],(sum(average_precisions) / len(average_precisions)))
