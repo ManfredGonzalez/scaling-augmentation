@@ -363,18 +363,8 @@ def policies_pineapple(scaling):
     :rtype: List[List[POLICY_TUPLE_TYPE]]
     :return: List of policies
     """
-    if scaling == '15_from_5':
-        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 0.33333) ],]
-    elif scaling == '8_from_5':
-        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 0.625) ],]
-    elif scaling == '5_from_8':
-        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 1.6) ],]
-    elif scaling == '15_from_8':
-        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 0.53333) ],]
-    elif scaling == '5_from_15':
-        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 3) ],]
-    elif scaling == '8_from_15':
-        policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, 1.875) ],]
+    policy = [[POLICY_TUPLE('Zoom_Scale', 1.0, scaling) ],]
+    
     
     return policy
 
