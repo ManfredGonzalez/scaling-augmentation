@@ -432,4 +432,4 @@ if __name__ == '__main__':
             aug_policy = policies.policies_STAC()
             aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
 
-    train(opt, opt.use_seed, aug_policy_container)
+    train(opt, opt.use_seed, aug_policy_container) 

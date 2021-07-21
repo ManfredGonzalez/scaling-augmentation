@@ -211,11 +211,18 @@ def run_metrics(compound_coef,
                 dest_height= 8,
                 input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536],
                 metric_option='coco',
+<<<<<<< HEAD
+                set_to_use='test',
+                augment_dataset=False,
+                id_augmentation=0,
+                num_of_workers=None,
+                batch_size=None):    
+=======
                 set_to_use='test_set',
                 augment_dataset=True,
                 num_of_workers=0,
                 batch_size=2):    
-
+>>>>>>> 294603ec56bc36eba796e431145631040071af89
     '''
     Method to perform the calculation of the metrics.
     '''
@@ -331,10 +338,14 @@ def run_metrics(compound_coef,
 
     #evaluate model using the ground truth and the predicted bounding boxes
     if(predictions > 0):
+<<<<<<< HEAD
+        if metric_option == 'coco':
+=======
         if metric_option=='coco':
         ## Evaluate using pycocotools
         
             
+>>>>>>> 294603ec56bc36eba796e431145631040071af89
             p,r = eval_pycoco_tools(image_ids, coco, f'results/{SET_NAME}_bbox_results.json', max_detect_list)
         
             print('call to metrics our implementation')
@@ -394,18 +405,49 @@ if __name__ == '__main__':
     use_cuda = False
     confidence_threshold = 0.5
     max_detections = [10, 100, 1000]
+<<<<<<< HEAD
+    #metric_option = "coco"
+    #set_to_use='test'
+=======
+>>>>>>> 294603ec56bc36eba796e431145631040071af89
     #augment_dataset=False
     #id_augmentation=1
     #num_of_workers=None
     #batch_size=None
     #------------------------------------------------------------------------------------------------------------------------------
+<<<<<<< HEAD
+
+    run_metrics(compound_coef, 
+                nms_threshold, 
+                confidence_threshold,
+                use_cuda,  
+                project_name, 
+                weights_path,  
+                max_detections)
+
+                '''
+                run_metrics(compound_coef, 
+                nms_threshold, 
+                confidence_threshold, 
+                use_cuda,  
+                project_name, 
+                weights_path, 
+                max_detect_list,
+                input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536],
+                metric_option='coco',
+                set_to_use='test',
+                augment_dataset=False,
+                id_augmentation=1,
+                num_of_workers=None,
+                batch_size=None):'''
+=======
     if False:
         run_metrics(compound_coef, 
                     nms_threshold, 
                     confidence_threshold,
                     use_cuda,  
                     project_name, 
-                    weights_path,   
+                    weights_path,  
                     max_detections,
                     augment_dataset=False,
                     metric_option='simple')
@@ -421,3 +463,4 @@ if __name__ == '__main__':
                     metric_option='simple',
                     orig_height= 5,
                     dest_height= 8)
+>>>>>>> 294603ec56bc36eba796e431145631040071af89
