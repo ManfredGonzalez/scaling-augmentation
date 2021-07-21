@@ -398,13 +398,25 @@ if __name__ == '__main__':
     #num_of_workers=None
     #batch_size=None
     #------------------------------------------------------------------------------------------------------------------------------
-
-    run_metrics(compound_coef, 
-                nms_threshold, 
-                confidence_threshold,
-                use_cuda,  
-                project_name, 
-                weights_path,  
-                max_detections,
-                augment_dataset=False,
-                metric_option='simple')
+    if False:
+        run_metrics(compound_coef, 
+                    nms_threshold, 
+                    confidence_threshold,
+                    use_cuda,  
+                    project_name, 
+                    weights_path,  
+                    max_detections,
+                    augment_dataset=False,
+                    metric_option='simple')
+    if True:
+        run_metrics(compound_coef, 
+                    nms_threshold, 
+                    confidence_threshold,
+                    use_cuda,  
+                    project_name, 
+                    weights_path,  
+                    max_detections,
+                    augment_dataset=True,
+                    metric_option='simple',
+                    orig_height= 5,
+                    dest_height= 8)
