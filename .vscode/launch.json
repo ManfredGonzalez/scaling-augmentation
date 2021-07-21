@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "env": { "CUDA_VISIBLE_DEVICES": "2"}, 
+            "env": { "CUDA_VISIBLE_DEVICES": "3"}, 
             "args": ["--project", "apple_h1",
                     "--compound_coef", "0",
                     "--batch_size", "2",

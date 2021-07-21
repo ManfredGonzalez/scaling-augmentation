@@ -1,13 +1,4 @@
-"""
-Author: Zylo117
-COCO-Style Evaluations
 
-put images here datasets/your_project_name/annotations/val_set_name/*.jpg
-put annotations here datasets/your_project_name/annotations/instances_{val_set_name}.json
-put weights here /path/to/your/weights/*.pth
-change compound_coef
-
-"""
 import sys
 import json
 import os
@@ -76,8 +67,8 @@ def evaluate_coco(img_path, image_ids, coco, model, conf_threshold, input_sizes,
 
         if rois.shape[0] > 0:
             # x1,y1,x2,y2 -> x1,y1,w,h
-            '''rois[:, 2] -= rois[:, 0]
-            rois[:, 3] -= rois[:, 1]'''
+            #rois[:, 2] -= rois[:, 0]
+            #rois[:, 3] -= rois[:, 1]
 
             bbox_score = scores
 
@@ -88,12 +79,12 @@ def evaluate_coco(img_path, image_ids, coco, model, conf_threshold, input_sizes,
                 #[train_idx, class_prediction, prob_score, x1, y1, x2, y2]
                 x1, y1, x2, y2 = box.tolist()
                 image_result = [image_id,label + 1, score, x1, y1, x2, y2]
-                '''image_result = {
-                    'image_id': image_id,
-                    'category_id': label + 1,
-                    'score': float(score),
-                    'bbox': box.tolist(),
-                }'''
+                #image_result = {
+                #    'image_id': image_id,
+                #    'category_id': label + 1,
+                #    'score': float(score),
+                #    'bbox': box.tolist(),
+                #}
 
                 results.append(image_result)
 
@@ -155,7 +146,8 @@ def run_metrics(compound_coef, nms_threshold, use_cuda, use_float16,
                 override_prev_results, project_name, weights_path, confidence_threshold,
                  max_detections, iteration,default_sizes=True, aug_policy=None, batch_size=None, 
                  num_of_workers=None,id_augmentation=None,
-                 name_old_set=None):            
+                 name_old_set=None):     
+
     #load default values and parameters
     #------------------------------------------------------------------------------------------------------------------------------
     print(f'running coco-style evaluation on project {project_name}, weights {weights_path}...')
@@ -165,7 +157,8 @@ def run_metrics(compound_coef, nms_threshold, use_cuda, use_float16,
         input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
     else:
         input_sizes = [1024, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
-    #------------------------------------------------------------------------------------------------------------------------------
+    
+    #read testing images from a different directory
     if name_old_set:
         SET_NAME = params[name_old_set]
         if iteration == None:
@@ -174,7 +167,7 @@ def run_metrics(compound_coef, nms_threshold, use_cuda, use_float16,
         else:
             VAL_GT = f'datasets/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
             VAL_IMGS = f'datasets/{params["project_name"]}/{SET_NAME}/'
-    #############################################################################################
+
     else:
         SET_NAME = params['test_set']
         VAL_GT = f'datasets/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
@@ -200,7 +193,7 @@ def run_metrics(compound_coef, nms_threshold, use_cuda, use_float16,
         if write_yml:
             with open(f'projects/{project_name}.yml', 'a') as my_file:
                 my_file.write(f'transformed_set_{id_augmentation}: test_{id_augmentation}\n')
-
+    #------------------------------------------------------------------------------------------------------------------------------
         
         #-----------------------------------------------------------------
         generate_COCO_Dataset_transformed(output_folder,gt_augmented_file,obj_list,VAL_IMGS[:len(VAL_IMGS)-1],VAL_GT,aug_policy,num_of_workers,batch_size)
@@ -356,3 +349,7 @@ if __name__ == '__main__':
                     aug_policy=aug_policy, batch_size=batch_size, 
                  num_of_workers=num_of_workers,id_augmentation=id_augmentation)
     #------------------------------------------------------------------------------------------------------------------------------
+
+
+
+

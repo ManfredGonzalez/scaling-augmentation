@@ -97,11 +97,11 @@ def preprocess_video(*frame_from_video, max_size=512, mean=(0.406, 0.456, 0.485)
     return ori_imgs, framed_imgs, framed_metas
     
     
-def postprocess_original(x, anchors, regression, classification, regressBoxes, clipBoxes, threshold, iou_threshold):
+def postprocess_original(x, anchors, regression, classification, regressBoxes, clipBoxes, conf_threshold, iou_threshold):
     transformed_anchors = regressBoxes(anchors, regression)
     transformed_anchors = clipBoxes(transformed_anchors, x)
     scores = torch.max(classification, dim=2, keepdim=True)[0]
-    scores_over_thresh = (scores > threshold)[:, :, 0]
+    scores_over_thresh = (scores > conf_threshold)[:, :, 0]
     out = []
     for i in range(x.shape[0]):
         if scores_over_thresh[i].sum() == 0:

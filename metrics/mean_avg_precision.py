@@ -110,4 +110,4 @@ def mean_average_precision(
 
     print(recalls_raw.size())
     print(recalls_raw.size()[0])
-    return (recalls_raw[recalls_raw.size()[0]-1],precisions_raw[precisions_raw.size()[0]-1],(sum(average_precisions) / len(average_precisions)))
+    return (recalls_raw[recalls_raw.size()[0]-1], precisions_raw[precisions_raw.size()[0]-1], (sum(average_precisions) / len(average_precisions)))
