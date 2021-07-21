@@ -3,6 +3,8 @@ import os
 import numpy as np
 import psutil
 import csv
+import shutil
+import sys
 
 import argparse
 import torch
@@ -14,10 +16,30 @@ from pycocotools.cocoeval import COCOeval
 from backbone import EfficientDetBackbone
 from efficientdet.utils import BBoxTransform, ClipBoxes
 from utils.utils import preprocess, invert_affine, postprocess_original, boolean_string
+from bbaug.policies import policies
 
 from coco_to_coco_augmented import generate_COCO_Dataset_transformed
+sys.path.append("metrics/")
+from metrics.mean_avg_precision import mean_average_precision
 
-
+def get_rois_from_gtjson(coco_json,is_ground_truth=True):
+    ground_truth_boxes = []
+    image_ids = coco_json.getImgIds()
+    for img_id in image_ids:
+        ann_ids = coco_json.getAnnIds(imgIds=img_id)
+        coco_annotations = coco_json.loadAnns(ann_ids)
+        for i in range(len(coco_annotations)):
+            label = coco_annotations[i]['category_id']
+            xmin = coco_annotations[i]['bbox'][0]
+            ymin = coco_annotations[i]['bbox'][1]
+            xmax = xmin + coco_annotations[i]['bbox'][2]
+            ymax = ymin + coco_annotations[i]['bbox'][3]
+            ground_truth_boxes.append([img_id,label,1, xmin, ymin, xmax, ymax])
+            #score = coco_annotations[i]['score']
+            #ground_truth_boxes.append([img_id,label,score, xmin, ymin, xmax, ymax])
+                    
+    
+    return ground_truth_boxes
 def get_predictions(imgs_path, 
                     set_name, 
                     image_ids, 
@@ -47,6 +69,7 @@ def get_predictions(imgs_path,
     :(list<dict>) -> [{'image_id': 0,'category_id': 0,'score': 0.98,'bbox': [0,0,0,0]}, {...}]
     '''
     results = []
+    predictions_boxes = []
     use_float16 = False # by default do not use float 16
 
     # to transfor boxes
@@ -97,7 +120,7 @@ def get_predictions(imgs_path,
         bbox_score = preds['scores']
         class_ids = preds['class_ids']
         rois = preds['rois']
-
+        rois2 = preds['rois']
         if rois.shape[0] > 0:
             # Translate from formats. In this: [x1,y1,x2,y2] -> [x1,y1,w,h]
             rois[:, 2] -= rois[:, 0]
@@ -108,14 +131,15 @@ def get_predictions(imgs_path,
                 score = float(bbox_score[roi_id])
                 label = int(class_ids[roi_id])
                 box = rois[roi_id, :]
-
                 image_result = {
                     'image_id': image_id,
                     'category_id': label + 1,
                     'score': float(score),
                     'bbox': box.tolist(),
                 }
-
+                box2 = rois2[roi_id, :]
+                xmin, ymin, w, h = box2.tolist()
+                predictions_boxes.append([image_id,label+1,score, xmin, ymin, xmin + w, ymin+h])
                 results.append(image_result)
 
     # write output
@@ -125,7 +149,7 @@ def get_predictions(imgs_path,
     json.dump(results, open(filepath, 'w'), indent=4)
 
     # return number of detections
-    return len(results)
+    return len(results),predictions_boxes
 
 #Run the evaluation of the model using pycocotools
 def eval_pycoco_tools(image_ids, coco_gt, pred_json_path, max_detect_list):
@@ -171,8 +195,9 @@ def eval_pycoco_tools(image_ids, coco_gt, pred_json_path, max_detect_list):
 
 
 #Run the evaluation of the model using our code
-def eval_fh(image_ids, coco_gt, pred_json_path, max_detect_list):
-    return 0
+def eval_fh(pineapples_detected, ground_truth_boxes, iou_threshold, num_classes):
+    p,r,ap = mean_average_precision(pineapples_detected, ground_truth_boxes, iou_threshold, box_format="corners", num_classes=num_classes)
+    return p,r,ap
 
 
 def run_metrics(compound_coef, 
@@ -182,13 +207,14 @@ def run_metrics(compound_coef,
                 project_name, 
                 weights_path, 
                 max_detect_list,
+                orig_height= 5,
+                dest_height= 8,
                 input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536],
                 metric_option='coco',
-                set_to_use='test',
-                augment_dataset=False,
-                id_augmentation=1,
-                num_of_workers=None,
-                batch_size=None):    
+                set_to_use='test_set',
+                augment_dataset=True,
+                num_of_workers=0,
+                batch_size=2):    
     '''
     Method to perform the calculation of the metrics.
     '''
@@ -199,8 +225,7 @@ def run_metrics(compound_coef,
     params = yaml.safe_load(open(f'projects/{project_name}.yml'))
     obj_list = params['obj_list']
     
-    # load json
-    SET_NAME = params[set_to_use + '_set']
+    SET_NAME = params[set_to_use]
     dataset_json = f'datasets/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
     dataset_imgs_path = f'datasets/{params["project_name"]}/{SET_NAME}/'
 
@@ -208,8 +233,8 @@ def run_metrics(compound_coef,
     # augment the dataset before calculating metrics
     #==================================
     if augment_dataset:
-        output_folder = f'datasets/{params["project_name"]}/{set_to_use}_{id_augmentation}/'
-        gt_augmented_file = f'datasets/{params["project_name"]}/annotations/instances_{set_to_use}_{id_augmentation}.json'
+        output_folder = f'datasets/{params["project_name"]}/{set_to_use}_transformed_{orig_height}_{dest_height}/'
+        gt_augmented_file = f'datasets/{params["project_name"]}/annotations/instances_{set_to_use}_transformed_{orig_height}_{dest_height}.json'
         write_yml = True
 
         # delete file and folder if exist and then, create them
@@ -230,18 +255,20 @@ def run_metrics(compound_coef,
             os.mkdir(output_folder)
 
         # create new file with a fixed name
-        new_set_name = f'transformed_set_{id_augmentation}
+        new_set_name = f'{set_to_use}_transformed_{orig_height}_{dest_height}'
         if write_yml:
             with open(f'projects/{project_name}.yml', 'a') as my_file:
-                my_file.write(f'{new_set_name}: {set_to_use}_{id_augmentation}\n')
+                my_file.write(f'{new_set_name}: {new_set_name}\n')
 
         
+        real_scale = 1/(dest_height/orig_height)
+        aug_policy = policies.policies_pineapple(real_scale)
         #---------
         generate_COCO_Dataset_transformed(output_folder,
                                             gt_augmented_file,
                                             obj_list,
                                             dataset_imgs_path[:len(dataset_imgs_path)-1],
-                                            gt_augmented_file,
+                                            dataset_json,
                                             aug_policy,
                                             num_of_workers,
                                             batch_size)
@@ -288,7 +315,7 @@ def run_metrics(compound_coef,
 
             
     #run the prediction of the bounding boxes and store results into a file
-    predictions = get_predictions(dataset_imgs_path, 
+    predictions,listPred = get_predictions(dataset_imgs_path, 
                                 SET_NAME, 
                                 image_ids, 
                                 coco, 
@@ -303,16 +330,34 @@ def run_metrics(compound_coef,
 
     #evaluate model using the ground truth and the predicted bounding boxes
     if(predictions > 0):
-        if metric_option:
+        if metric_option=='coco':
+        ## Evaluate using pycocotools
+        
+            
             p,r = eval_pycoco_tools(image_ids, coco, f'results/{SET_NAME}_bbox_results.json', max_detect_list)
-        else:
+        
             print('call to metrics our implementation')
-        f1_result = (2.0 * p * r)/ (p + r)
+            f1_result = (2.0 * p * r)/ (p + r)
+        
+        elif metric_option=='simple':    
+            ## get the groundtruth boxes 
+            ground_truth_boxes = get_rois_from_gtjson(coco)
+            ## Evaluate using our implementation of 11-point interpolation metric
+            
+                
+            p,r,ap = eval_fh(listPred, ground_truth_boxes, nms_threshold, 1)
+        
+            print('call to metrics our implementation')
+            f1_result = (2.0 * p * r)/ (p + r)
+        else:
+            p = 0
+            r = 0
+            f1_result = 0
     else:
         p = 0
         r = 0
         f1_result = 0
-        
+    
     print()
     print("===============================================================")
     print("Precision:" + str(p))
@@ -336,18 +381,23 @@ def throttle_cpu(cpu_list):
 
 #main method to be called
 if __name__ == '__main__':
-    throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39])
+    #throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39])
     
     #------------------------------------------------------------------------------------------------------------------------------    
     project_name = "apple_c1"
     weights_path = "logs/apple_c1/efficientdet-d0_trained_weights_semi_0.pth"
+    #project_name = "5m_train_valid_test_vl"#"b_apple_8"#
+    #weights_path = "logs/efficientdet-d0_trained_weights.pth"
     compound_coef = 0
     nms_threshold = 0.5
-    use_cuda = True
+    use_cuda = False
     confidence_threshold = 0.5
     max_detections = [10, 100, 1000]
-    metric_option = "coco"
-    set_to_use='test'
+    #metric_option = "coco"
+    #metric_option = "simple"
+    set_to_use='test_set'
+    orig_height= 5
+    dest_height= 8
     #augment_dataset=False
     #id_augmentation=1
     #num_of_workers=None
@@ -360,4 +410,6 @@ if __name__ == '__main__':
                 use_cuda,  
                 project_name, 
                 weights_path,  
-                max_detections)
+                max_detections,
+                augment_dataset=False,
+                metric_option='simple')
