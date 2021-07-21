@@ -40,6 +40,8 @@ def get_rois_from_gtjson(coco_json,is_ground_truth=True):
                     
     
     return ground_truth_boxes
+
+    
 def get_predictions(imgs_path, 
                     set_name, 
                     image_ids, 
@@ -420,4 +422,4 @@ if __name__ == '__main__':
                     augment_dataset=True,
                     metric_option='simple',
                     orig_height= 5,
-                    dest_height= 8)
+                    dest_height= 8) #
