@@ -393,11 +393,6 @@ if __name__ == '__main__':
     use_cuda = False
     confidence_threshold = 0.5
     max_detections = [10, 100, 1000]
-    #metric_option = "coco"
-    #metric_option = "simple"
-    set_to_use='test_set'
-    orig_height= 5
-    dest_height= 8
     #augment_dataset=False
     #id_augmentation=1
     #num_of_workers=None
