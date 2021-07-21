@@ -186,7 +186,7 @@ def run_metrics(compound_coef,
                 metric_option='coco',
                 set_to_use='test',
                 augment_dataset=False,
-                id_augmentation=1,
+                id_augmentation=0,
                 num_of_workers=None,
                 batch_size=None):    
     '''
@@ -303,7 +303,7 @@ def run_metrics(compound_coef,
 
     #evaluate model using the ground truth and the predicted bounding boxes
     if(predictions > 0):
-        if metric_option:
+        if metric_option == 'coco':
             p,r = eval_pycoco_tools(image_ids, coco, f'results/{SET_NAME}_bbox_results.json', max_detect_list)
         else:
             print('call to metrics our implementation')
@@ -336,7 +336,7 @@ def throttle_cpu(cpu_list):
 
 #main method to be called
 if __name__ == '__main__':
-    throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39])
+    #throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39])
     
     #------------------------------------------------------------------------------------------------------------------------------    
     project_name = "apple_c1"
@@ -346,8 +346,8 @@ if __name__ == '__main__':
     use_cuda = True
     confidence_threshold = 0.5
     max_detections = [10, 100, 1000]
-    metric_option = "coco"
-    set_to_use='test'
+    #metric_option = "coco"
+    #set_to_use='test'
     #augment_dataset=False
     #id_augmentation=1
     #num_of_workers=None
@@ -361,3 +361,19 @@ if __name__ == '__main__':
                 project_name, 
                 weights_path,  
                 max_detections)
+
+                '''
+                run_metrics(compound_coef, 
+                nms_threshold, 
+                confidence_threshold, 
+                use_cuda,  
+                project_name, 
+                weights_path, 
+                max_detect_list,
+                input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536],
+                metric_option='coco',
+                set_to_use='test',
+                augment_dataset=False,
+                id_augmentation=1,
+                num_of_workers=None,
+                batch_size=None):'''

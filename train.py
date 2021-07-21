@@ -6,6 +6,7 @@ import datetime
 import os
 import traceback
 import psutil
+import random
 
 import numpy as np
 import torch
@@ -66,7 +67,7 @@ class ModelWithLoss(nn.Module):
 
 
 
-def train(opt, use_seed):
+def train(opt, use_seed, aug_policy_container):
     '''
     Perform training of the model.
 
@@ -84,14 +85,15 @@ def train(opt, use_seed):
     if use_seed:
         #get seed or seeds (for the one or various experiments)
         seeds = [int(item) for item in opt.seed_values.split(' ')]
+        my_seed = seeds[0]
 
         if torch.cuda.is_available():
-            torch.cuda.manual_seed(seeds[experiment])
+            torch.cuda.manual_seed(my_seed)
 
-        torch.manual_seed(seeds[experiment])
-        torch.cuda.manual_seed(seeds[experiment])
-        np.random.seed(seeds[experiment])
-        random.seed(seeds[experiment])
+        torch.manual_seed(my_seed)
+        torch.cuda.manual_seed(my_seed)
+        np.random.seed(my_seed)
+        random.seed(my_seed)
         torch.backends.cudnn.deterministic = True
 
     # read paths to save weights
@@ -100,17 +102,15 @@ def train(opt, use_seed):
     os.makedirs(opt.log_path, exist_ok=True)
     os.makedirs(opt.saved_path, exist_ok=True)
 
-    # define policies for data augmentation
-    aug_policy = policies.policies_pineapple('15_from_5')
-    aug_policy_container = policies.PolicyContainer(aug_policy, random_state=42)
-    input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1356] # these are the standard sizes
+    # these are the standard sizes
+    input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1356] 
 
     # define the training and validation sets
     training_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), 
                                 set=params.train_set,
                                 transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
                                                              Resizer(input_sizes[opt.compound_coef])]),
-                                policy_container = None)
+                                policy_container = aug_policy_container)
 
     training_generator = DataLoader(training_set, 
                                     batch_size= opt.batch_size,
@@ -403,6 +403,7 @@ def get_args():
     parser.add_argument('--use_seed', type=boolean_string, default=True)
     parser.add_argument('--seed_values', type=str, default="")
     parser.add_argument('--shuffle_ds', type=boolean_string, default=True)
+    parser.add_argument('--policy', type=str, default="")
 
     args = parser.parse_args()
     return args
@@ -416,8 +417,19 @@ def throttle_cpu(cpu_list):
         temp.cpu_affinity([i for i in cpu_list])
 
 
+
 if __name__ == '__main__':
     throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39]) 
-
     opt = get_args()
-    train(opt, opt.use_seed)
+
+    # ask if we want to use a policy
+    aug_policy_container = None
+    random_state = None
+    if len(opt.policy) > 1:
+
+        # select the policy
+        if opt.policy == 'stac':
+            aug_policy = policies.policies_STAC()
+            aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
+
+    train(opt, opt.use_seed, aug_policy_container)

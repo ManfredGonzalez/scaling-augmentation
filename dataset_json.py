@@ -327,11 +327,11 @@ def create_project_file(project_name, output_project_file, train_, val_, test_, 
 
 
 
-if(False):
+if __name__ == '__main__':
     input_path = 'datasets/yolo_format/apple_yolov4pytorch/'
     annotations_file = "_annotations.txt"
     classes_file = "_classes.txt"
-    project_name = "apple_h1"
+    project_name = "apple_c2"
     set_1 = "train"
     set_2 = "val"
     set_3 = "test" 
@@ -357,32 +357,33 @@ if(False):
     #create yml
     create_project_file(project_name, output_yml, set_1, set_2, set_3, set_4, class_list)
 
-if(False):
-    input_path = 'datasets/yolo_format/apple_yolov4pytorch/'
-    annotations_file = "_annotations.txt"
-    classes_file = "_classes.txt"
-    project_name = "apple_h1"
-    set_1 = "train"
-    set_2 = "val"
-    set_3 = "test" 
-    #set_4 = "unlabeled"
-    img_extension = "jpg"
 
-    ratio_set_1 = 0.7
-    ratio_set_2 = 0.15
-    ratio_set_3 = 0.15
+    if(False):
+        input_path = 'datasets/yolo_format/apple_yolov4pytorch/'
+        annotations_file = "_annotations.txt"
+        classes_file = "_classes.txt"
+        project_name = "apple_h1"
+        set_1 = "train"
+        set_2 = "val"
+        set_3 = "test" 
+        #set_4 = "unlabeled"
+        img_extension = "jpg"
 
-    shuffle = True
-    seed = 12
-    sub_sample = 0
+        ratio_set_1 = 0.7
+        ratio_set_2 = 0.15
+        ratio_set_3 = 0.15
 
-    output_folder = 'datasets/' + project_name + '/'
-    output_yml = 'projects/' + project_name + '.yml'
+        shuffle = True
+        seed = 12
+        sub_sample = 0
 
-    #run split
-    class_list = split_data(input_path, output_folder, annotations_file, classes_file, 
-                            set_1, set_2, set_3,
-                            ratio_set_1, ratio_set_2, ratio_set_3, 
-                            shuffle, sub_sample, seed, img_extension)
-    #create yml
-    create_project_file(project_name, output_yml, set_1, set_3, set_3, set_2, class_list)
+        output_folder = 'datasets/' + project_name + '/'
+        output_yml = 'projects/' + project_name + '.yml'
+
+        #run split
+        class_list = split_data(input_path, output_folder, annotations_file, classes_file, 
+                                set_1, set_2, set_3,
+                                ratio_set_1, ratio_set_2, ratio_set_3, 
+                                shuffle, sub_sample, seed, img_extension)
+        #create yml
+        create_project_file(project_name, output_yml, set_1, set_3, set_3, set_2, class_list)

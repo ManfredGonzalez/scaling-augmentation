@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 from efficientdet.utils import BBoxTransform, ClipBoxes
-from utils.utils import postprocess, invert_affine, display
+from utils.utils import postprocess_original, invert_affine, display
 
 
 def calc_iou(a, b):
@@ -168,10 +168,12 @@ class FocalLoss(nn.Module):
             regressBoxes = BBoxTransform()
             clipBoxes = ClipBoxes()
             obj_list = kwargs.get('obj_list', None)
-            out = postprocess(imgs.detach(),
-                              torch.stack([anchors[0]] * imgs.shape[0], 0).detach(), regressions.detach(), classifications.detach(),
-                              regressBoxes, clipBoxes,
-                              0.5, 0.3)
+            out = postprocess_original(imgs.detach(),
+                                        torch.stack([anchors[0]] * imgs.shape[0], 0).detach(), 
+                                        regressions.detach(), 
+                                        classifications.detach(),
+                                        regressBoxes, clipBoxes,
+                                        0.5, 0.3)
             imgs = imgs.permute(0, 2, 3, 1).cpu().numpy()
             imgs = ((imgs * [0.229, 0.224, 0.225] + [0.485, 0.456, 0.406]) * 255).astype(np.uint8)
             imgs = [cv2.cvtColor(img, cv2.COLOR_RGB2BGR) for img in imgs]

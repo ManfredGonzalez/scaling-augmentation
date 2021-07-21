@@ -19,7 +19,9 @@
                     "--num_epochs", "5", 
                     "--es_patience", "300",
                     "--use_seed", "True", 
-                    "--seed_values", "42"]
+                    "--seed_values", "42",
+                    "--policy", "stac",
+                    "--debug", "True"]
         }
     ]
 }

@@ -321,6 +321,41 @@ def policies_v3() -> List[List[POLICY_TUPLE_TYPE]]:
     ]
     return policy
 
+
+def policies_STAC():
+    """
+    Policy to apply in the case of pineapples
+​
+    :rtype: List[List[POLICY_TUPLE_TYPE]]
+    :return: List of policies
+    """
+    color_ = random.choice(['Auto_Contrast', 
+                            'Brightness', 
+                            'Color', 
+                            'Contrast', 
+                            'Equalize', 
+                            'Solarize', 
+                            'Sharpness', 
+                            'Posterize'])
+    affine_ = random.choice(['Translate_X', 
+                            'Translate_Y', 
+                            'Rotate', 'Shear_X', 
+                            'Shear_Y'])
+    affine_bbox_ = random.choice(['Translate_X_BBox', 
+                                    'Translate_Y_BBox', 
+                                    'Shear_X_BBox', 
+                                    'Shear_Y_BBox'])
+
+    policy = [
+      [
+          POLICY_TUPLE(color_, 1.0, np.random.randint(1, 11)),
+          POLICY_TUPLE(affine_, 1.0, 10),
+          POLICY_TUPLE(affine_bbox_, 1.0, 5),
+      ],
+    ]
+    return policy
+
+
 def policies_pineapple(scaling):
     """
     Policy to apply in the case of pineapples
@@ -357,6 +392,7 @@ def list_policies() -> List:
         policies_v2.__name__,
         policies_v3.__name__,
         policies_pineapple.__name__,
+        policies_STAC.__name__,
     ]
 
 
