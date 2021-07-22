@@ -24,16 +24,14 @@ from metrics.mean_avg_precision import mean_average_precision
 
 def get_rois_from_gtjson(coco_json):
     '''
-    Extract the ground truth bounding boxes and store the results into a list
+    Extract the ground truth bounding boxes and store the results into a list. Important: The ground truth score must be always 1 by default 
+    indicating a 100% of confidence in the object existence.
 
     Params
     :coco_json (pycocotools.coco) -> pycocotools for loading the bboxes from the json.
 
     Return
-    :(list) -> [['image_id': int,'category_id': int,'score': 1, xmin: int, ymin: int, xmax: int, ymax: int], [...]]
-
-    Important
-    The ground truth score must be always 1 by default indicating a 100% of confidence in the object existence
+    :(list) -> [['image_id': int,'category_id': int,'score': 1, xmin: int, ymin: int, xmax: int, ymax: int], [...]]    
     '''
     ground_truth_boxes = []
     image_ids = coco_json.getImgIds()
@@ -78,8 +76,8 @@ def get_predictions(imgs_path,
     :use_cuda (bool) -> use gpu or not.
 
     Return
-    :(list<dict>) -> [{'image_id': 0,'category_id': 0,'score': 0.98,'bbox': [0,0,0,0]}, {...}]
-    :(list) -> [['image_id': int,'category_id': int,'score': 0.98, xmin: int, ymin: int, xmax: int, ymax: int], [...]]
+    :int -> number of bounding boxes detected.
+    :(list) -> [['image_id': int,'category_id': int,'score': 1, xmin: int, ymin: int, xmax: int, ymax: int], [...]]
     '''
     results = []
     predictions_boxes = []
@@ -153,7 +151,7 @@ def get_predictions(imgs_path,
                 # append the annotation in another format into a list
                 # required for the simple metric
                 xmin, ymin, w, h = box.tolist()
-                predictions_boxes.append([image_id,label+1,score, xmin, ymin, xmin + w, ymin+h])
+                predictions_boxes.append([image_id, label+1, score, xmin, ymin, xmin + w, ymin + h])######### ?????????????????????????????
 
     # write output
     filepath = f'results/{set_name}_bbox_results.json'
@@ -162,10 +160,26 @@ def get_predictions(imgs_path,
     json.dump(results, open(filepath, 'w'), indent=4)
 
     # return number of detections
-    return len(results),predictions_boxes
+    return len(results), predictions_boxes
 
 #Run the evaluation of the model using pycocotools
-def eval_pycoco_tools(image_ids, coco_gt, pred_json_path, max_detect_list):
+def eval_pycoco_tools(image_ids, 
+                    coco_gt, 
+                    pred_json_path, 
+                    max_detect_list):
+    '''
+    PyCocoTools style to calculate the metrics.
+
+    Params
+    :image_ids (list) -> ids of the images.
+    :coco_gt (pycocotools.coco) -> object that has access to the ground truth.
+    :pred_json_path (str) -> location path of the json with predictions.
+    :max_detect_list (list<int>) -> list with max detections.
+
+    Return
+    :precision_result (float) -> precision value.
+    :recall_result (float) -> recall value.
+    '''
     # load results in COCO evaluation tool
     coco_pred = coco_gt.loadRes(pred_json_path)
 
@@ -208,8 +222,25 @@ def eval_pycoco_tools(image_ids, coco_gt, pred_json_path, max_detect_list):
 
 
 #Run the evaluation of the model using our code
-def eval_fh(pineapples_detected, ground_truth_boxes, iou_threshold, num_classes):
-    p,r,ap = mean_average_precision(pineapples_detected, ground_truth_boxes, iou_threshold, box_format="corners", num_classes=num_classes)
+def eval_fh(pineapples_detected, 
+            ground_truth_boxes, 
+            iou_threshold, 
+            num_classes):
+    '''
+    Method to calculate precision, recall, and average precision with a general approach, i.e., not using 
+    number of max detections (as performed by pycocotools). This method is a single general calculation.
+
+    Params
+    :pineapples_detected (list) -> Format:[['image_id': int,'category_id': int,'score': 1, xmin: int, ymin: int, xmax: int, ymax: int], [...]]
+    :ground_truth_boxes (list) -> Format: [['image_id': int,'category_id': int,'score': 1, xmin: int, ymin: int, xmax: int, ymax: int], [...]] 
+    :iou_threshold (int) -> iou to be used to filter out results.
+    :num_classes (int) -> number of total classes (categories) we have.
+    '''
+    p,r,ap = mean_average_precision(pineapples_detected, 
+                                    ground_truth_boxes, 
+                                    iou_threshold, 
+                                    box_format="corners", 
+                                    num_classes=num_classes)
     return p,r,ap
 
 
@@ -493,7 +524,7 @@ if __name__ == '__main__':
                 opt.weights,   
                 max_detections,
                 augment_dataset=opt.augment_ds,
-                metric_option=opt.metric,
+                metric_option=opt.metric,git 
                 orig_height=opt.orig_height,
                 dest_height=opt.dest_height)
 
