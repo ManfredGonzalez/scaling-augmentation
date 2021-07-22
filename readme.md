@@ -21,9 +21,7 @@ Requirements:
 
 ## Training
 
-Training EfficientDet is a painful and time-consuming task. You shouldn't expect to get a good result within a day or two. Please be patient.
-
-Check out this [tutorial](tutorial/train_shape.ipynb) if you are new to this. You can run it on colab with GPU support.
+This sections shows the format of the dataset to be used in this framework.
 
 ### 1. Prepare your dataset
 
@@ -34,24 +32,32 @@ Check out this [tutorial](tutorial/train_shape.ipynb) if you are new to this. Yo
                 -*.jpg
             -val_set_name/
                 -*.jpg
+            -test_set_name/
+                -*.jpg
             -annotations
                 -instances_{train_set_name}.json
                 -instances_{val_set_name}.json
+                -instances_{test_set_name}.json
     
-    # for example, coco2017
+    # for example, our toy dataset 'apple'
     datasets/
-        -coco2017/
-            -train2017/
+        -apple/
+            -train/
                 -000000000001.jpg
                 -000000000002.jpg
                 -000000000003.jpg
-            -val2017/
+            -val/
+                -000000000004.jpg
+                -000000000005.jpg
+                -000000000006.jpg
+            -test/
                 -000000000004.jpg
                 -000000000005.jpg
                 -000000000006.jpg
             -annotations
-                -instances_train2017.json
-                -instances_val2017.json
+                -instances_train.json
+                -instances_val.json
+                -instances_test.json
 
 ### 2. Manual set project's specific parameters
 

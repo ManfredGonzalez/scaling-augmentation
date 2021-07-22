@@ -1,8 +1,0 @@
-Epoch:0 / Step: 22 / Loss: 1075.5025081634521
-Epoch:1 / Step: 44 / Loss: 346.84638118743896
-Epoch:2 / Step: 66 / Loss: 88.7288990020752
-Epoch:3 / Step: 88 / Loss: 45.47144532203674
-Epoch:0 / Step: 22 / Loss: 678.5475883483887
-Epoch:0 / Step: 22 / Loss: 119.46926546096802
-Epoch:1 / Step: 44 / Loss: 7.699031054973602
-Epoch:0 / Step: 22 / Loss: 151.91727697849274
