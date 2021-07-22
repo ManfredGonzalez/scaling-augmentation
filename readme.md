@@ -39,20 +39,25 @@ This sections shows the format of the dataset to be used in this framework.
                 -instances_{val_set_name}.json
                 -instances_{test_set_name}.json
     
-    # for example, our toy dataset `apple'
+    # for example, our toy dataset 'apple'
     datasets/
-        -coco2017/
-            -train2017/
+        -apple/
+            -train/
                 -000000000001.jpg
                 -000000000002.jpg
                 -000000000003.jpg
-            -val2017/
+            -val/
+                -000000000004.jpg
+                -000000000005.jpg
+                -000000000006.jpg
+            -test/
                 -000000000004.jpg
                 -000000000005.jpg
                 -000000000006.jpg
             -annotations
-                -instances_train2017.json
-                -instances_val2017.json
+                -instances_train.json
+                -instances_val.json
+                -instances_test.json
 
 ### 2. Manual set project's specific parameters
 
