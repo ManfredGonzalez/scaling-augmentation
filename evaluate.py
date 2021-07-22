@@ -300,7 +300,7 @@ def run_metrics(compound_coef,
         os.mkdir('results/')
     with open(f'results/{params["project_name"]}_results_d{compound_coef}.csv', "a") as myfile:
         my_writer = csv.writer(myfile, delimiter=',', quotechar='"')
-        my_writer.writerow(["groundtruth_num", "num_detections", "nms_threshold", "confidence_threshold", "precision", "recall", "f1_score"])
+        my_writer.writerow(["metric", "groundtruth_num", "num_detections", "nms_threshold", "confidence_threshold", "precision", "recall", "f1_score"])
     #---------------------------------------------------------------------------------------------------------
        
 
@@ -331,12 +331,10 @@ def run_metrics(compound_coef,
     #---------------------------------------------------------------------------------------------------------
 
 
-    #evaluate model using the ground truth and the predicted bounding boxes
+    # evaluate model using the ground truth and the predicted bounding boxes
     if(predictions > 0):
         if metric_option=='coco':
-        ## Evaluate using pycocotools
-        
-            
+            # evaluate using pycocotools
             p,r = eval_pycoco_tools(image_ids, coco, f'results/{SET_NAME}_bbox_results.json', max_detect_list)
         
             print('call to metrics our implementation')
@@ -370,38 +368,63 @@ def run_metrics(compound_coef,
     #store results
     with open(f'results/{params["project_name"]}_results_d{compound_coef}.csv', "a") as myfile:
         my_writer = csv.writer(myfile, delimiter=',', quotechar='"')
-        my_writer.writerow([groundtruth_num, predictions, nms_threshold, confidence_threshold, p, r, f1_result])
+        my_writer.writerow([metric_option, groundtruth_num, predictions, nms_threshold, confidence_threshold, p, r, f1_result])
     #--------------------------------------------
 
 
-#LIMIT THE NUMBER OF CPU TO PROCESS THE JOB
+
+
+#               Section for handling parameters from user
+#--------------------------------------------------------------------------------------------------------------------
 def throttle_cpu(cpu_list):
+    """Read file with parameters"""
     p = psutil.Process()
     for i in p.threads():
         temp = psutil.Process(i.id)
         temp.cpu_affinity([i for i in cpu_list])
 
 
-#main method to be called
-if __name__ == '__main__':
-    #throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39])
-    
-    #------------------------------------------------------------------------------------------------------------------------------    
-    project_name = "apple_c1"
-    weights_path = "logs/apple_c1/efficientdet-d0_trained_weights_semi_0.pth"
+def get_args():
+    """Get all expected parameters"""
+    parser = argparse.ArgumentParser('EfficientDet Pytorch - Evaluate the model')
+    parser.add_argument('-p', '--project', type=str, default="")
+    parser.add_argument('-c', '--compound_coef', type=int, default=0)
+    parser.add_argument('-n', '--num_workers', type=int, default=2)
+    parser.add_argument('--batch_size', type=int, default=4)
+    parser.add_argument('-w', '--weights', type=str, default="") 
+    parser.add_argument('--nms_thres', type=float, default=0.5)
+    parser.add_argument('--conf_thres', type=float, default=0.5)
+    parser.add_argument('--use_cuda', type=boolean_string, default=False)
+    parser.add_argument('--max_detect', type=str, default="")
+    parser.add_argument('--augment_ds', type=boolean_string, default=False)    
+    parser.add_argument('--policy', type=str, default="")
+    parser.add_argument('--debug', type=boolean_string, default=False)
+    parser.add_argument('--metric', type=str, default="simple")
+    parser.add_argument('--orig_height', type=int, default=0)
+    parser.add_argument('--dest_height', type=int, default=0)
+
+    args = parser.parse_args()
+    return args
+
+# wired test cases
+def test_case1():
+    #-------------------
+    project_name = "apple_c2"
+    weights_path = "logs/apple_c2/efficientdet-d0_best.pth"
     #project_name = "5m_train_valid_test_vl"#"b_apple_8"#
     #weights_path = "logs/efficientdet-d0_trained_weights.pth"
     compound_coef = 0
     nms_threshold = 0.5
-    use_cuda = False
+    use_cuda = True
     confidence_threshold = 0.5
     max_detections = [10, 100, 1000]
     #augment_dataset=False
     #id_augmentation=1
     #num_of_workers=None
     #batch_size=None
-    #------------------------------------------------------------------------------------------------------------------------------
-    if False:
+    #--------------------
+
+    if True:
         run_metrics(compound_coef, 
                     nms_threshold, 
                     confidence_threshold,
@@ -410,8 +433,8 @@ if __name__ == '__main__':
                     weights_path,   
                     max_detections,
                     augment_dataset=False,
-                    metric_option='simple')
-    if True:
+                    metric_option='coco')
+    if False:
         run_metrics(compound_coef, 
                     nms_threshold, 
                     confidence_threshold,
@@ -423,3 +446,30 @@ if __name__ == '__main__':
                     metric_option='simple',
                     orig_height= 5,
                     dest_height= 8) ##
+
+#main method to be called
+if __name__ == '__main__':
+    throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39]) 
+    test_case1()
+    '''
+    opt = get_args()
+
+    # get the values from the string
+    max_detections = [int(item) for item in opt.max_detect.split(' ')]
+
+    # main method to measure performance
+    run_metrics(opt.compound_coef, 
+                opt.nms_thres, 
+                opt.conf_thres,
+                opt.use_cuda,  
+                opt.project, 
+                opt.weights,   
+                max_detections,
+                augment_dataset=opt.augment_ds,
+                metric_option=opt.metric,
+                orig_height=opt.orig_height,
+                dest_height=opt.dest_height)'''
+
+
+
+

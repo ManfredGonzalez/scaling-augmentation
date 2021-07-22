@@ -275,7 +275,7 @@ def train(opt, use_seed, aug_policy_container):
 
                     # save the model
                     if step % opt.save_interval == 0 and step > 0:
-                        save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth')
+                        save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_last.pth')
                         #save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_trained_weights.pth')
                         print('checkpoint...')
 
@@ -334,8 +334,8 @@ def train(opt, use_seed, aug_policy_container):
                     best_loss = loss
                     best_epoch = epoch
 
-                    #save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_trained_weights.pth')
-                    save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth')
+                    save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_best.pth')
+                    #save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth')
                     with open(os.path.join(opt.saved_path, f"best_epoch-d{opt.compound_coef}.txt"), "a") as my_file: 
                         my_file.write(f"Epoch:{epoch} / Step: {step} / Loss: {best_loss}\n") 
 
@@ -384,8 +384,8 @@ def get_args():
     parser = argparse.ArgumentParser('EfficientDet Pytorch')
     parser.add_argument('-p', '--project', type=str, default='coco')
     parser.add_argument('-c', '--compound_coef', type=int, default=0)
-    parser.add_argument('-n', '--num_workers', type=int, default=12)
-    parser.add_argument('--batch_size', type=int, default=12)
+    parser.add_argument('-n', '--num_workers', type=int, default=4)
+    parser.add_argument('--batch_size', type=int, default=4)
     parser.add_argument('--head_only', type=boolean_string, default=False)
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--optim', type=str, default='adamw') # select optimizer for training, suggest using admaw until the very final stage then switch to sgd

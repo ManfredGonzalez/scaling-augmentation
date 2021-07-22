@@ -11,6 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "env": { "CUDA_VISIBLE_DEVICES": "3"}, 
+            /*
             "args": ["--project", "apple_h1",
                     "--compound_coef", "0",
                     "--batch_size", "2",
@@ -22,6 +23,18 @@
                     "--seed_values", "42",
                     "--policy", "stac",
                     "--debug", "True"]
+            */
+            "args": ["--project", "apple_c1",
+                "--compound_coef", "0",
+                "--batch_size", "2",
+                "--lr", "1e-2", 
+                "--load_weights", "weights/efficientdet-d0.pth", 
+                "--num_epochs", "5", 
+                "--es_patience", "300",
+                "--use_seed", "True", 
+                "--seed_values", "2",
+                "--policy", "stac",
+                "--debug", "False"]
         }
     ]
 }
