@@ -3,6 +3,7 @@ Module for object detection augmentation using google policies
 Paper: https://arxiv.org/abs/1906.11172
 """
 from functools import wraps
+import random
 
 from imgaug import augmenters as iaa
 import numpy as np
@@ -114,7 +115,9 @@ def _shear_mag_to_arg(magnitude: int) -> float:
     :rtype: float
     :return: shear magnitude
     """
-    return (magnitude / _MAX_MAGNITUDE) * 0.3
+    rand_res = 1 if random.random() > 0.5 else -1
+
+    return rand_res * (magnitude * 0.6) # formula using the official range of imgaug https://imgaug.readthedocs.io/en/latest/source/overview/geometric.html#shearx
 
 
 @negate
