@@ -168,7 +168,10 @@ class CocoDataset(Dataset):
 
             # augmentation got rid of bboxes... so, return just the original image
             else:
-                return img_t, boxes_t.squeeze(), imgName, torch.tensor([]), torch.tensor([]), ""
+                if self.use_only_aug:
+                    img_aug_t, torch.tensor([]), "aug_" + imgName, torch.tensor([]), torch.tensor([]), ""
+                else:
+                    return img_t, boxes_t.squeeze(), imgName, torch.tensor([]), torch.tensor([]), ""
                 
 
         # No augmentation at all

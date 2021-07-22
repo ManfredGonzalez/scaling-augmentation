@@ -408,7 +408,7 @@ def get_args():
     parser.add_argument('--saved_path', type=str, default='logs/')
     parser.add_argument('--debug', type=boolean_string, default=False) # whether visualize the predicted boxes of training, the output images will be in test
     #----------------------
-    parser.add_argument('--use_seed', type=boolean_string, default=True)
+    parser.add_argument('--use_seed', type=boolean_string, default=False)
     parser.add_argument('--seed_values', type=str, default="")
     parser.add_argument('--shuffle_ds', type=boolean_string, default=True)
     parser.add_argument('--policy', type=str, default="")
