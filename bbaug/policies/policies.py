@@ -348,9 +348,12 @@ def policies_STAC():
 
     policy = [
       [
-          POLICY_TUPLE(color_, 1.0, np.random.randint(1, 11)),
-          POLICY_TUPLE(affine_, 1.0, 10),
-          POLICY_TUPLE(affine_bbox_, 1.0, 5),
+          POLICY_TUPLE(color_, 0.6, np.random.randint(1, 11)),
+          POLICY_TUPLE(affine_, 0.5, 5),
+          POLICY_TUPLE(affine_bbox_, 0.9, 4)
+          #POLICY_TUPLE('Cutout_BBox', 1.0, 6)
+          #POLICY_TUPLE('Translate_X_BBox', 1.0, 5)
+          #POLICY_TUPLE('Fliplr_BBox', 1.0, 2)
       ],
     ]
     return policy

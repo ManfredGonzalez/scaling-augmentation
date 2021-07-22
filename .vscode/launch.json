@@ -34,7 +34,7 @@
                 "--use_seed", "True", 
                 "--seed_values", "2",
                 "--policy", "stac",
-                "--debug", "False"]
+                "--debug", "True"]
         }
     ]
 }

@@ -397,7 +397,6 @@ def get_args():
     parser.add_argument('--use_cuda', type=boolean_string, default=False)
     parser.add_argument('--max_detect', type=str, default="")
     parser.add_argument('--augment_ds', type=boolean_string, default=False)    
-    parser.add_argument('--policy', type=str, default="")
     parser.add_argument('--debug', type=boolean_string, default=False)
     parser.add_argument('--metric', type=str, default="simple")
     parser.add_argument('--orig_height', type=int, default=0)
@@ -409,10 +408,10 @@ def get_args():
 # wired test cases
 def test_case1():
     #-------------------
-    project_name = "apple_c2"
-    weights_path = "logs/apple_c2/efficientdet-d0_best.pth"
-    #project_name = "5m_train_valid_test_vl"#"b_apple_8"#
-    #weights_path = "logs/efficientdet-d0_trained_weights.pth"
+    #project_name = "apple_c1"
+    #weights_path = "logs/apple_c1_1/efficientdet-d0_trained_weights_semi_0.pth"
+    project_name = "apple_c1"
+    weights_path = "logs/apple_c1/efficientdet-d0_best.pth"
     compound_coef = 0
     nms_threshold = 0.5
     use_cuda = True
@@ -433,7 +432,7 @@ def test_case1():
                     weights_path,   
                     max_detections,
                     augment_dataset=False,
-                    metric_option='coco')
+                    metric_option='simple')
     if False:
         run_metrics(compound_coef, 
                     nms_threshold, 
@@ -450,8 +449,6 @@ def test_case1():
 #main method to be called
 if __name__ == '__main__':
     throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39]) 
-    test_case1()
-    '''
     opt = get_args()
 
     # get the values from the string
@@ -468,7 +465,7 @@ if __name__ == '__main__':
                 augment_dataset=opt.augment_ds,
                 metric_option=opt.metric,
                 orig_height=opt.orig_height,
-                dest_height=opt.dest_height)'''
+                dest_height=opt.dest_height)
 
 
 

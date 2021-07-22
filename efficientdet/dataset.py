@@ -92,7 +92,6 @@ class CocoDataset(Dataset):
         imgName = self.coco.loadImgs(self.image_ids[image_index])[0]['file_name']
         img = cv2.imread(os.path.join(self.root_dir, self.set_name, imgName))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        #img = img.astype(np.float32) / 255.
 
         # List: get annotation id from coco
         ann_ids = self.coco.getAnnIds(imgIds=self.image_ids[image_index], iscrowd=False)
@@ -127,35 +126,50 @@ class CocoDataset(Dataset):
                 boxes,
                 labels,
             )
+            img = img.astype(np.float32) / 255.
+            img_aug = img_aug.astype(np.float32) / 255.
 
             # Add the labels to the boxes
             labels = np.array(labels)
             boxes = np.hstack(( np.array(boxes), np.vstack(labels) )) 
+            #bbs_aug = np.array(bbs_aug)
 
-            # Format correction from the augmentation: send category to the end of the row 
-            bbs_aug = np.array(bbs_aug)
-            bbs_aug = bbs_aug[:, [1,2,3,4,0]].astype(np.float32) 
-
+            # normalization
+            #--------------
             # create dictionary to apply the transformation 
             sample_original = {'img': img, 'annot': boxes}
-            sample_augmented = {'img': img_aug, 'annot': bbs_aug}
             if self.transform:
                 sample_original = self.transform(sample_original)
-                sample_augmented = self.transform(sample_augmented)
-
             # get the data from the resulting dictionary
             img_t, boxes_t = sample_original['img'], sample_original['annot']
-            img_aug_t, bbs_aug_t = sample_augmented['img'], sample_augmented['annot']
+            #--------------
 
-            # it may happen that the transformation removes all bounding boxes
-            if bbs_aug_t.numel() > 0:
+            # sometimes the augmentation gets rid of the bounding boxes
+            if len(bbs_aug.shape) > 1:
+
+                # normalization
+                #--------------
+                # Format correction from the augmentation: send category to the end of the row 
+                bbs_aug = bbs_aug[:, [1,2,3,4,0]].astype(np.float32) 
+                # create dictionary to apply the transformation
+                sample_augmented = {'img': img_aug, 'annot': bbs_aug}
+                if self.transform:
+                    sample_augmented = self.transform(sample_augmented)
+                # get the data from the resulting dictionary
+                img_aug_t, bbs_aug_t = sample_augmented['img'], sample_augmented['annot']
+                #--------------
+
                 return img_t, boxes_t.squeeze(), imgName, img_aug_t, bbs_aug_t.squeeze(), "aug_" + imgName
+
+            # augmentation got rid of bboxes... so, return just the original image
             else:
                 return img_t, boxes_t.squeeze(), imgName, torch.tensor([]), torch.tensor([]), ""
-
+                
 
         # No augmentation at all
         else:
+            img = img.astype(np.float32) / 255.
+
             # locate the category at the end
             boxes = np.hstack(( np.array(boxes), np.vstack(labels) ))
 

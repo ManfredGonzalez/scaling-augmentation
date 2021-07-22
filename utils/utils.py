@@ -313,14 +313,14 @@ def display(preds, imgs, obj_list, imshow=True, imwrite=False):
             continue
 
         imgs[i] = imgs[i].copy()
-
+        '''
         for j in range(len(preds[i]['rois'])):
             (x1, y1, x2, y2) = preds[i]['rois'][j].astype(np.int)
             obj = obj_list[preds[i]['class_ids'][j]]
             score = float(preds[i]['scores'][j])
 
             plot_one_box(imgs[i], [x1, y1, x2, y2], label=obj, score=score,
-                         color=color_list[get_index_label(obj, obj_list)])
+                         color=color_list[get_index_label(obj, obj_list)])'''
         if imshow:
             cv2.imshow('img', imgs[i])
             cv2.waitKey(0)

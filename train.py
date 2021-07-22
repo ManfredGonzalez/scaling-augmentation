@@ -137,30 +137,35 @@ def train(opt, use_seed, aug_policy_container):
                                 ratios=eval(params.anchors_ratios), 
                                 scales=eval(params.anchors_scales))
 
-    # load last weights
+    # Load last weights from COCO
+    #----------------------------------------------------
     if opt.load_weights is not None:
-        if opt.load_weights.endswith('.pth'):
-            weights_path = opt.load_weights
-        else:
-            weights_path = get_last_weights(opt.saved_path)
-        try:
-            last_step = int(os.path.basename(weights_path).split('_')[-1].split('.')[0])
-        except:
-            last_step = 0
+        weights_path = opt.load_weights
 
         try:
             ret = model.load_state_dict(torch.load(weights_path), strict=False)
         except RuntimeError as e:
             print(f'[Warning] Ignoring {e}')
-            print('[Warning] Don\'t panic if you see this, this might be because you load a pretrained weights with different number of classes. The rest of the weights should be loaded already.')
-        print(f'[Info] loaded weights: {os.path.basename(weights_path)}, resuming checkpoint from step: {last_step}')
-    else:
-        last_step = 0
-        print('[Info] initializing weights...')
-        init_weights(model)
+            print(
+                '[Warning] Don\'t panic if you see this, this might be because you load a pretrained weights with different number of classes. The rest of the weights should be loaded already.')
 
-    # freeze backbone if train head_only
+        #print(f'[Info] loaded weights: {os.path.basename(weights_path)}, resuming checkpoint from step: {last_step}')
+    else:
+        #Random initialization
+        #print('[Info] initializing weights...')
+        #init_weights(model)
+        print("--------------------------------------------------")
+        print("--------------------------------------------------")
+        print("error 1")
+        print("--------------------------------------------------")
+        print("--------------------------------------------------")
+        return None
+
+    # Freeze backbone if train head_only
+    #----------------------------------------------------
+    '''
     if opt.head_only:
+        print("THIS SHOULD BE SET TO FALSE SINCE THIS IS SEMISUPERVISED")
         def freeze_backbone(m):
             classname = m.__class__.__name__
             for ntl in ['EfficientNet', 'BiFPN']:
@@ -170,6 +175,7 @@ def train(opt, use_seed, aug_policy_container):
 
         model.apply(freeze_backbone)
         print('[Info] freezed backbone')
+    '''
 
     # https://github.com/vacancy/Synchronized-BatchNorm-PyTorch
     # apply sync_bn when using multiple gpu and batch_size per gpu is lower than 4
@@ -207,6 +213,7 @@ def train(opt, use_seed, aug_policy_container):
     epoch = 0
     best_loss = 1000.0
     best_epoch = 0
+    last_step = 0
     step = max(0, last_step)
     model.train()
     num_iter_per_epoch = len(training_generator)
@@ -348,7 +355,7 @@ def train(opt, use_seed, aug_policy_container):
                     break
 
     except KeyboardInterrupt:
-        save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth')
+        save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_last.pth')
         writer.close()
     writer.close()
 
@@ -391,7 +398,7 @@ def get_args():
     parser.add_argument('--optim', type=str, default='adamw') # select optimizer for training, suggest using admaw until the very final stage then switch to sgd
     parser.add_argument('--num_epochs', type=int, default=500)
     parser.add_argument('--val_interval', type=int, default=1) # Number of epoches between valing phases
-    parser.add_argument('--save_interval', type=int, default=500) # Number of steps between saving
+    parser.add_argument('--save_interval', type=int, default=100) # Number of steps between saving
     parser.add_argument('--es_min_delta', type=float, default=0.0) # Early stopping's parameter: minimum change loss to qualify as an improvement
     parser.add_argument('--es_patience', type=int, default=0) # Early stopping\'s parameter: number of epochs with no improvement after which training will be stopped. Set to 0 to disable this technique.
     parser.add_argument('--data_path', type=str, default='datasets/') # the root folder of dataset
