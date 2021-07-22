@@ -22,7 +22,19 @@ from coco_to_coco_augmented import generate_COCO_Dataset_transformed
 sys.path.append("metrics/")
 from metrics.mean_avg_precision import mean_average_precision
 
-def get_rois_from_gtjson(coco_json,is_ground_truth=True):
+def get_rois_from_gtjson(coco_json):
+    '''
+    Extract the ground truth bounding boxes and store the results into a list
+
+    Params
+    :coco_json (pycocotools.coco) -> pycocotools for loading the bboxes from the json.
+
+    Return
+    :(list) -> [['image_id': int,'category_id': int,'score': 1, xmin: int, ymin: int, xmax: int, ymax: int], [...]]
+
+    Important
+    The ground truth score must be always 1 by default indicating a 100% of confidence in the object existence
+    '''
     ground_truth_boxes = []
     image_ids = coco_json.getImgIds()
     for img_id in image_ids:
@@ -35,8 +47,6 @@ def get_rois_from_gtjson(coco_json,is_ground_truth=True):
             xmax = xmin + coco_annotations[i]['bbox'][2]
             ymax = ymin + coco_annotations[i]['bbox'][3]
             ground_truth_boxes.append([img_id,label,1, xmin, ymin, xmax, ymax])
-            #score = coco_annotations[i]['score']
-            #ground_truth_boxes.append([img_id,label,score, xmin, ymin, xmax, ymax])
                     
     
     return ground_truth_boxes
@@ -69,6 +79,7 @@ def get_predictions(imgs_path,
 
     Return
     :(list<dict>) -> [{'image_id': 0,'category_id': 0,'score': 0.98,'bbox': [0,0,0,0]}, {...}]
+    :(list) -> [['image_id': int,'category_id': int,'score': 1, xmin: int, ymin: int, xmax: int, ymax: int], [...]]
     '''
     results = []
     predictions_boxes = []
@@ -122,7 +133,6 @@ def get_predictions(imgs_path,
         bbox_score = preds['scores']
         class_ids = preds['class_ids']
         rois = preds['rois']
-        rois2 = preds['rois']
         if rois.shape[0] > 0:
             # Translate from formats. In this: [x1,y1,x2,y2] -> [x1,y1,w,h]
             rois[:, 2] -= rois[:, 0]
@@ -139,10 +149,11 @@ def get_predictions(imgs_path,
                     'score': float(score),
                     'bbox': box.tolist(),
                 }
-                box2 = rois2[roi_id, :]
-                xmin, ymin, w, h = box2.tolist()
-                predictions_boxes.append([image_id,label+1,score, xmin, ymin, xmin + w, ymin+h])
                 results.append(image_result)
+                # append the annotation in another format into a list
+                # required for the simple metric
+                xmin, ymin, w, h = box.tolist()
+                predictions_boxes.append([image_id,label+1,score, xmin, ymin, xmin + w, ymin+h])
 
     # write output
     filepath = f'results/{set_name}_bbox_results.json'
@@ -220,6 +231,23 @@ def run_metrics(compound_coef,
 
     '''
     Method to perform the calculation of the metrics.
+    
+    :set_to_use (str) -> name of the set that is going to be used. E.g. test, val, or train.
+    :conf_threshold (float) -> confidence threshold to filter results.
+    :nms_threshold (float) -> non-maximum supression to filter results.
+    :input_sizes (list<int>) -> input sizes of the different architectures of EfficientDet.
+    :compound_coef (int) -> compound coefficient that indicates the architecture used.
+    :use_cuda (bool) -> use gpu or not.
+    :project_name (str) -> name of the .yml file the same as de dataset
+    :orig_height (int) -> current height of the image
+    :dest_height (int) -> resulted height of the transformed images
+    :metric_option (str) -> indicate which metric will be used (coco, simple). The coco metric uses
+                            101 point interpolation to calculate the average precision while the simple 
+                            option uses 11 point interpolation.
+    :num_of_workers (int) -> number of workers for the dataloader of the dataset
+    :batch_size (int) -> size of the batch for the dataloader of the dataset
+    :augment_dataset (bool) -> apply scaling transformation or not
+    :weights_path (str) -> path of the trained weights
     '''
 
 
@@ -263,10 +291,12 @@ def run_metrics(compound_coef,
             with open(f'projects/{project_name}.yml', 'a') as my_file:
                 my_file.write(f'{new_set_name}: {new_set_name}\n')
 
-        
+        # calculate the magnitude for the scaling policy
         real_scale = 1/(dest_height/orig_height)
+        # instance the scaling policy
         aug_policy = policies.policies_pineapple(real_scale)
         #---------
+        # Generate the transformed coco json file of the ground truth 
         generate_COCO_Dataset_transformed(output_folder,
                                             gt_augmented_file,
                                             obj_list,
@@ -276,7 +306,7 @@ def run_metrics(compound_coef,
                                             num_of_workers,
                                             batch_size)
         #---------
-
+        # set the new the transformed ground truth file as the current ground truth file
         params = yaml.safe_load(open(f'projects/{project_name}.yml'))
         SET_NAME = params[new_set_name]
         dataset_json = f'datasets/{params["project_name"]}/annotations/instances_{SET_NAME}.json'

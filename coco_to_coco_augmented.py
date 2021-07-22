@@ -203,7 +203,23 @@ def annotations_to_json(im, img_name, img_index, img_extension,
         ann_counter += 1
     return json_data, ann_counter
 
-def generate_COCO_Dataset_transformed(output_imgs_folder,output_json_name,obj_list,inpur_dir_images,input_coco_anns,aug_policy,num_of_workers,train_batch_size):
+def generate_COCO_Dataset_transformed(output_imgs_folder,output_json_name,obj_list,inpur_dir_images,input_coco_anns,aug_policy,num_of_workers,batch_size):
+    '''
+     Generate a transformation of the ground truth with the specified augmentation policy
+
+    Params
+    :output_imgs_folder (str) -> path where the transformed images will be stored.
+    :output_json_name (str) -> path and name where the new json file will be stored.
+    :obj_list (list<int>) -> classes of the annotations.
+    :inpur_dir_images (pycocotools.coco) -> current path of the images
+    :input_coco_anns (EfficientDetBackbone) -> current path and name of the json file
+    :aug_policy List<POLICY_TUPLE_TYPE> -> policy to apply.
+    :num_of_workers (int) -> number of workers for the dataloader of the dataset
+    :batch_size (int) -> size of the batch for the dataloader of the dataset
+    Return
+    :annotations file (pycocotools.coco)
+    :transformed images (.jpg)
+    '''
     aug_policy_container = policies.PolicyContainer(aug_policy, random_state=42)
     # Generate the dataloader just with transformed images.
     write_just_aug = True
@@ -225,7 +241,7 @@ def generate_COCO_Dataset_transformed(output_imgs_folder,output_json_name,obj_li
                                 )
     # own DataLoader
     data_extractor = torch.utils.data.DataLoader(my_dataset,
-                                            batch_size=train_batch_size,
+                                            batch_size=batch_size,
                                             shuffle=True,
                                             num_workers=num_of_workers,
                                             collate_fn=my_dataset.collate_fn)
@@ -252,36 +268,3 @@ def generate_COCO_Dataset_transformed(output_imgs_folder,output_json_name,obj_li
             image_id = image_id + 1
         #-------------------
 # -------------------------------------------------------------------------------#
-# A simple test using our coco dataset
-# policies_pineapple only accepts the following parameters:
-#           15_from_5
-#           8_from_5
-#           5_from_8
-#           15_from_8
-#           5_from_15
-#           8_from_15
-# these parameters refer to the scaling you can make for this specific problem of pineapples
-#import torch
-if False:
-    torch.manual_seed(0)
-
-    aug_policy = policies.policies_pineapple('15_from_5')
-    #path to your own data and coco file
-    train_data_dir = 'datasets/apple_h1/test'
-    train_coco = 'datasets/apple_h1/annotations/instances_test.json'
-    # Batch size
-    train_batch_size = 3
-    # num of workers
-    num_of_workers = 0
-    # paths to save the resulted images and the annotations json file
-    class_list = ['apple']
-    output_folder_for_images = 'datasets/apple_h1/results2/'
-    output_name_json = 'datasets/apple_h1/results2/instances_test.json'
-
-
-
-
-
-
-    generate_COCO_Dataset_transformed(output_folder_for_images,output_name_json,class_list,train_data_dir,train_coco,
-    aug_policy,num_of_workers,train_batch_size)
