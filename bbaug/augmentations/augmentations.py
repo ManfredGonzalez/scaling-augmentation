@@ -117,7 +117,7 @@ def _shear_mag_to_arg(magnitude: int) -> float:
     """
     rand_res = 1 if random.random() > 0.5 else -1
 
-    return rand_res * (magnitude * 0.6) # formula using the official range of imgaug https://imgaug.readthedocs.io/en/latest/source/overview/geometric.html#shearx
+    return rand_res * (magnitude * 2.7) # formula using the official range of imgaug https://imgaug.readthedocs.io/en/latest/source/overview/geometric.html#shearx
 
 
 @negate
