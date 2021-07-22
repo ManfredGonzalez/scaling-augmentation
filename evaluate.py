@@ -79,7 +79,7 @@ def get_predictions(imgs_path,
 
     Return
     :(list<dict>) -> [{'image_id': 0,'category_id': 0,'score': 0.98,'bbox': [0,0,0,0]}, {...}]
-    :(list) -> [['image_id': int,'category_id': int,'score': 1, xmin: int, ymin: int, xmax: int, ymax: int], [...]]
+    :(list) -> [['image_id': int,'category_id': int,'score': 0.98, xmin: int, ymin: int, xmax: int, ymax: int], [...]]
     '''
     results = []
     predictions_boxes = []
