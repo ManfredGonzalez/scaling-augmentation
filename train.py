@@ -110,7 +110,8 @@ def train(opt, use_seed, aug_policy_container):
                                 set=params.train_set,
                                 transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
                                                              Resizer(input_sizes[opt.compound_coef])]),
-                                policy_container = aug_policy_container)
+                                policy_container = aug_policy_container,
+                                use_only_aug = opt.use_only_aug)
 
     training_generator = DataLoader(training_set, 
                                     batch_size= opt.batch_size,
@@ -411,6 +412,7 @@ def get_args():
     parser.add_argument('--seed_values', type=str, default="")
     parser.add_argument('--shuffle_ds', type=boolean_string, default=True)
     parser.add_argument('--policy', type=str, default="")
+    parser.add_argument('--use_only_aug', type=boolean_string, default=False)
 
     args = parser.parse_args()
     return args

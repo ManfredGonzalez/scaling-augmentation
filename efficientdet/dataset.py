@@ -9,15 +9,16 @@ import cv2
 
 
 class CocoDataset(Dataset):
-    def __init__(self, root_dir, set='train2017', transform=None, policy_container=None):
+    def __init__(self, root_dir, set='train2017', transform=None, policy_container=None, use_only_aug=False):
         '''
         Definition of the Dataset, policies and transformation to be used.
 
-        params
+        Params
         :root_dir (string): root location of the dataset.
         :set (string): name of the dataset - this name must match the physical folder.
         :transform (torchvision.transforms.Compose): sequence of transformations to apply to the data.
         :policy_container (bbaug.policies): set of policies from where one will be chosen to be applied.
+        :use_only_aug (bool) -> indicates if training will use only augmented images.
         '''
         self.root_dir = root_dir
         self.set_name = set
@@ -30,6 +31,7 @@ class CocoDataset(Dataset):
         #-----------------
         self.policy_container = policy_container
         self.to_tensor = transforms.ToTensor()
+        self.use_only_aug = use_only_aug 
         #-----------------
 
 
@@ -37,10 +39,10 @@ class CocoDataset(Dataset):
         '''
         Load classes/categories from the dataset. Load the results to self-inner-class variables.
 
-        params
+        Params
         :None
 
-        return
+        Return
         :None
         '''
         # load class names (name -> label)
@@ -61,7 +63,7 @@ class CocoDataset(Dataset):
         '''
         Get the total number of images in the dataset.
         
-        return
+        Return
         :int -> total number of images.
         '''
         return len(self.image_ids)
@@ -71,10 +73,10 @@ class CocoDataset(Dataset):
         '''
         Get the specified item from the dataset.
 
-        params
+        Params
         :image_index (int) -> id of the image (corresponding to the json file).
 
-        return <if there is a policy>
+        Return <if there is a policy>
         :img (torch.tensor) -> image already normalized.
         :boxes (torch.tensor) -> annotations. Shape -> [batch , bounding_boxes , 5]. 5 -> first 4 for the coordinates and the final position for the category.
         :imgName (string) -> original name of the image.
@@ -82,7 +84,7 @@ class CocoDataset(Dataset):
         :bbs_aug (torch.tensor) -> annotations. Shape -> [batch , bounding_boxes , 5]. 5 -> first 4 for the coordinates and the final position for the category.
         :imgName_aug (string) -> name of the augmented image (same name of the original but with 'aug_' added at the beginning).
 
-        return <if there is NO policy>
+        Return <if there is NO policy>
         :img (torch.tensor) -> image already normalized.
         :boxes (torch.tensor) -> annotations. Shape -> [batch , bounding_boxes , 5]. 5 -> first 4 for the coordinates and the final position for the category.
         :imgName (string) -> original name of the image.
@@ -159,7 +161,10 @@ class CocoDataset(Dataset):
                 img_aug_t, bbs_aug_t = sample_augmented['img'], sample_augmented['annot']
                 #--------------
 
-                return img_t, boxes_t.squeeze(), imgName, img_aug_t, bbs_aug_t.squeeze(), "aug_" + imgName
+                if self.use_only_aug:
+                    return img_aug_t, bbs_aug_t.squeeze(), "aug_" + imgName, torch.tensor([]), torch.tensor([]), ""
+                else:
+                    return img_t, boxes_t.squeeze(), imgName, img_aug_t, bbs_aug_t.squeeze(), "aug_" + imgName
 
             # augmentation got rid of bboxes... so, return just the original image
             else:
@@ -187,10 +192,10 @@ class CocoDataset(Dataset):
         '''
         Collater function. In case that an augmentation was applied, we have to concatenate everything in tensors.
 
-        params
+        Params
         :batch (tuple) -> tuple with all the data in the form of tensors.
 
-        return
+        Return
         :dictionary -> {images: torch.tensor, annotations: torch.tensor, image_names: list(string)}
         '''
         if self.policy_container:
@@ -273,7 +278,7 @@ class Resizer(object):
         '''
         Resizing the image into a fixed value.
 
-        params
+        Params
         :img_size (int) -> size of the output image.
         '''
         self.img_size = img_size
@@ -283,10 +288,10 @@ class Resizer(object):
         '''
         Method that will be executed when the transformation is called.
 
-        params
+        Params
         :sample (dict{numpy, numpy}) -> dictionary with the image and the annotations. Format -> {'img': numpy, 'annot': numpy}
 
-        return
+        Return
         :dictionary{torch.tensor, torch.tensor}, same format as the input. Format -> {'img': torch.tensor, 'annot': torch.tensor}
         '''
         image, annots = sample['img'], sample['annot']
@@ -323,7 +328,7 @@ class Normalizer(object):
         '''
         Normalization using fixed values.
 
-        params
+        Params
         :mean (float list) -> mean values of the channels.
         :std (float list) -> standard deviation values of the channels.
         '''
@@ -334,34 +339,10 @@ class Normalizer(object):
         '''
         Apply normalization when the transformation is called.
 
-        params
+        Params
         :sample (dict) -> dictionary with the array containing the image and the annotations. Format -> {'img': img, 'annot': boxes}
         '''
         image, annots = sample['img'], sample['annot']
         return {'img': ((image.astype(np.float32) - self.mean) / self.std), 'annot': annots}
 
 
-'''
-#THIS CLASS WAS REMOVED IN ORDER TO USE THE POLICY AUGMENTATIONS.
-class Augmenter(object):
-    """Convert ndarrays in sample to Tensors."""
-
-    def __call__(self, sample, flip_x=0.5):
-        if np.random.rand() < flip_x:
-            image, annots = sample['img'], sample['annot']
-            image = image[:, ::-1, :]
-
-            rows, cols, channels = image.shape
-
-            x1 = annots[:, 0].copy()
-            x2 = annots[:, 2].copy()
-
-            x_tmp = x1.copy()
-
-            annots[:, 0] = cols - x2
-            annots[:, 2] = cols - x_tmp
-
-            sample = {'img': image, 'annot': annots}
-
-        return sample
-'''
