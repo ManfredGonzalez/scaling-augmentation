@@ -8,6 +8,7 @@ import shutil
 import json
 import cv2
 import yaml
+import glob
 
 
 
@@ -39,8 +40,8 @@ def copy_data():
 
 
     
-def split_data(file_input_dir, output_folder, annotations_file, 
-               classes_file, name_1, name_2, name_3, set_1, set_2, set_3, shuffle, sub_sample, seed, img_extension):
+def split_data(file_input_dir, output_folder, 
+               classes_file, name_1, name_2, name_3, set_1, set_2, set_3, shuffle, sub_sample, seed, img_extension, annotations_file=None):
     """
     Method to split into train/test/val sets.
 
@@ -54,8 +55,10 @@ def split_data(file_input_dir, output_folder, annotations_file,
     :None.
     """
     #get data
-    anns_names_list, anns_bboxes_list, class_list = files_to_array(file_input_dir + annotations_file, file_input_dir + classes_file)
-    
+    if annotations_file:
+        anns_names_list, anns_bboxes_list, class_list = files_to_array(file_input_dir + annotations_file, file_input_dir + classes_file)
+    else:
+        anns_names_list, anns_bboxes_list, class_list = files_to_array_yolov3(file_input_dir, file_input_dir + classes_file,img_extension)
     #check if the splits make sense
     if set_1 + set_2 + set_3 != 1.0:
         raise Exception("The split should sum 1.0")
@@ -229,6 +232,46 @@ def files_to_array(annotations_file, class_file):
         annotations_bboxes.append(array[1:])
     return annotations_names, annotations_bboxes, class_list
 
+def files_to_array_yolov3(file_input_dir, class_file,img_extension):
+    """
+    Read files of annotations (yolo v3) and classes and returns the info into lists.
+
+    Params
+    :annotations_directory(str) path to annotations (format: yolo v3).
+    :class_file(str) path to annotations (format: yolo v3).
+
+    Returns
+    :annotaions_result(list of tuples) format: [('image_name.jpg', [anno_1, anno_2]), ... , (...)]
+    :class_file(list of classes) string list of the names of the classes.
+    """
+    with open(class_file, "r") as my_file:
+        class_list = my_file.read().split('\n')
+
+    myImages = [f for f in os.listdir(file_input_dir) if f.endswith(f'.{img_extension}')]
+    
+    annotations_names = []
+    annotations_bboxes = []
+    for file_image_name in myImages:
+        img_path = file_input_dir + file_image_name
+        imgRGB = cv2.imread(img_path)
+        imageHeight, imageWidth, channels = imgRGB.shape
+        yoloFile = open(img_path[:len(img_path)-4]+'.txt','r').readlines()
+        
+        annotations = []
+        for label in yoloFile:
+            label = label.split()
+            xcenter = float(label[1]) * imageWidth
+            ycenter = float(label[2]) * imageHeight
+            bbox_width = float(label[3]) * imageWidth
+            bbox_height = float(label[4]) * imageHeight
+            x_top_left = int(abs(xcenter-(bbox_width/2)))
+            y_top_left  = int(abs(ycenter - (bbox_height/2)))
+            x_bottom_right = x_top_left + bbox_width
+            y_bottom_right = y_top_left + bbox_height
+            annotations.append(f'{x_top_left},{y_top_left},{x_bottom_right},{y_bottom_right},{label[0]}')
+        annotations_names.append(file_image_name)
+        annotations_bboxes.append(annotations)
+    return annotations_names, annotations_bboxes, class_list
 
 def lists_to_json(class_list):
     """
@@ -328,32 +371,33 @@ def create_project_file(project_name, output_project_file, train_, val_, test_, 
 
 
 if __name__ == '__main__':
-    input_path = 'datasets/yolo_format/apple_yolov4pytorch/'
-    annotations_file = "_annotations.txt"
-    classes_file = "_classes.txt"
-    project_name = "apple_c2"
+    input_path = 'datasets/5m_pineapple_yolov3/'
+    #annotations_file = "_annotations.txt"
+    annotations_file = None
+    classes_file = "classes.txt"
+    project_name = "5m_pineapple_10"
     set_1 = "train"
     set_2 = "val"
     set_3 = "test" 
     set_4 = "None"
-    img_extension = "jpg"
+    img_extension = "JPG"
 
     ratio_set_1 = 0.7
     ratio_set_2 = 0.15
     ratio_set_3 = 0.15
 
     shuffle = True
-    seed = 12
+    seed = 10
     sub_sample = 0
 
     output_folder = 'datasets/' + project_name + '/'
     output_yml = 'projects/' + project_name + '.yml'
 
     #run split
-    class_list = split_data(input_path, output_folder, annotations_file, classes_file, 
+    class_list = split_data(input_path, output_folder, classes_file, 
                             set_1, set_2, set_3,
                             ratio_set_1, ratio_set_2, ratio_set_3, 
-                            shuffle, sub_sample, seed, img_extension)
+                            shuffle, sub_sample, seed, img_extension,annotations_file = annotations_file)
     #create yml
     create_project_file(project_name, output_yml, set_1, set_2, set_3, set_4, class_list)
 
