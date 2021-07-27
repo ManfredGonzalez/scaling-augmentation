@@ -9,7 +9,8 @@ import json
 import cv2
 import yaml
 import glob
-
+from utils.utils import boolean_string
+import argparse
 
 
 def copy_data():
@@ -369,9 +370,30 @@ def create_project_file(project_name, output_project_file, train_, val_, test_, 
         my_file.write(f'obj_list: {obj_list}\n')
 
 
+def get_args():
+    """Get all expected parameters"""
+    parser = argparse.ArgumentParser('Create Yolo v3-v4 datasets to COCO')
+    parser.add_argument('--yolo_version', type=str, default='v3')
+    parser.add_argument('--input_path', type=str, default='datasets/yolo_format/apple_yolov4pytorch/')
+    parser.add_argument('--annotations_file', type=str, default='_annotations.txt')
+    parser.add_argument('--classes_file', type=str, default='classes.txt')
+    parser.add_argument('-p', '--project_name', type=str, default='5m_pineapple_10')
+    parser.add_argument('--set_1', type=str, default='train')
+    parser.add_argument('--set_2', type=str, default='val')
+    parser.add_argument('--set_3', type=str, default='test')
+    parser.add_argument('--set_4', type=str, default='None')
+    parser.add_argument('--ratio_set_1', type=float, default=0.7) 
+    parser.add_argument('--ratio_set_2', type=float, default=0.15) 
+    parser.add_argument('--ratio_set_3', type=float, default=0.15)
+    parser.add_argument('--shuffle', type=boolean_string, default=True) 
+    parser.add_argument('--seed', type=int, default=10)
+    parser.add_argument('--sub_sample', type=int, default=0)
+    parser.add_argument('--img_extension', type=str, default='jpg')
 
+    args = parser.parse_args()
+    return args
 if __name__ == '__main__':
-    input_path = 'datasets/5m_pineapple_yolov3/'
+    '''input_path = 'datasets/5m_pineapple_yolov3/'
     #annotations_file = "_annotations.txt"
     annotations_file = None
     classes_file = "classes.txt"
@@ -388,18 +410,27 @@ if __name__ == '__main__':
 
     shuffle = True
     seed = 10
-    sub_sample = 0
+    sub_sample = 0'''
+    opt = get_args()
 
-    output_folder = 'datasets/' + project_name + '/'
-    output_yml = 'projects/' + project_name + '.yml'
+    output_folder = 'datasets/' + opt.project_name + '/'
+    output_yml = 'projects/' + opt.project_name + '.yml'
 
     #run split
-    class_list = split_data(input_path, output_folder, classes_file, 
-                            set_1, set_2, set_3,
-                            ratio_set_1, ratio_set_2, ratio_set_3, 
-                            shuffle, sub_sample, seed, img_extension,annotations_file = annotations_file)
+    if opt.yolo_version == 'v3':
+        class_list = split_data(opt.input_path, output_folder, opt.classes_file, 
+                                opt.set_1, opt.set_2, opt.set_3,
+                                opt.ratio_set_1, opt.ratio_set_2, opt.ratio_set_3, 
+                                opt.shuffle, opt.sub_sample, opt.seed, opt.img_extension,annotations_file = None)
+        create_project_file(opt.project_name, output_yml, opt.set_1, opt.set_2, opt.set_3, opt.set_4, class_list)
+    elif opt.yolo_version == 'v4': 
+        class_list = split_data(opt.input_path, output_folder, opt.classes_file, 
+                                opt.set_1, opt.set_2, opt.set_3,
+                                opt.ratio_set_1, opt.ratio_set_2, opt.ratio_set_3, 
+                                opt.shuffle, opt.ub_sample, opt.seed, opt.img_extension,annotations_file = opt.annotations_file)
+        create_project_file(opt.project_name, output_yml, opt.set_1, opt.set_2, opt.set_3, opt.set_4, class_list)
     #create yml
-    create_project_file(project_name, output_yml, set_1, set_2, set_3, set_4, class_list)
+    
 
 
     if(False):
