@@ -524,7 +524,7 @@ if __name__ == '__main__':
                 opt.weights,   
                 max_detections,
                 augment_dataset=opt.augment_ds,
-                metric_option=opt.metric,git 
+                metric_option=opt.metric, 
                 orig_height=opt.orig_height,
                 dest_height=opt.dest_height)
 
