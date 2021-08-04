@@ -434,11 +434,36 @@ if __name__ == '__main__':
     # ask if we want to use a policy
     aug_policy_container = None
     random_state = None
+    print(' ')
+    print('#########################')
+    print('POLICY NAME')
+    print(opt.policy)
+    print(opt.use_only_aug)
+    print('#########################')
     if len(opt.policy) > 1:
 
         # select the policy
         if opt.policy == 'stac':
             aug_policy = policies.policies_STAC()
             aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
-
+        elif opt.policy == 'scaling_10m':
+            ori = 5
+            dest = 10
+            scaling = 1/(dest/ori)
+            aug_policy = policies.policies_pineapple(scaling)
+            aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
+            print('#########################')
+            print('Scaling magnitude')
+            print(scaling)
+            print('#########################')
+        elif opt.policy == 'scaling_15m':
+            ori = 5
+            dest = 15
+            scaling = 1/(dest/ori)
+            aug_policy = policies.policies_pineapple(scaling)
+            aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
+            print('#########################')
+            print('Scaling magnitude')
+            print(scaling)
+            print('#########################')
     train(opt, opt.use_seed, aug_policy_container) 
