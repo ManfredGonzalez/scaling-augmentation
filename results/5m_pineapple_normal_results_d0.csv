@@ -1,0 +1,13 @@
+metric,groundtruth_num,num_detections,nms_threshold,confidence_threshold,precision,recall,f1_score
+metric,groundtruth_num,num_detections,nms_threshold,confidence_threshold,precision,recall,f1_score
+simple,1254,65,0.5,0.5,0.0,0.0,0
+metric,groundtruth_num,num_detections,nms_threshold,confidence_threshold,precision,recall,f1_score
+simple,1254,0,0.5,0.5,0,0,0
+metric,groundtruth_num,num_detections,nms_threshold,confidence_threshold,precision,recall,f1_score
+coco,1254,0,0.5,0.5,0,0,0
+metric,groundtruth_num,num_detections,nms_threshold,confidence_threshold,precision,recall,f1_score
+simple,1254,0,0.5,0.5,0,0,0
+metric,groundtruth_num,num_detections,nms_threshold,confidence_threshold,precision,recall,f1_score
+coco,1254,34,0.5,0.5,1.0,0.02631578947368421,0.05128205128205127
+metric,groundtruth_num,num_detections,nms_threshold,confidence_threshold,precision,recall,f1_score
+simple,1254,26,0.5,0.5,0.9999999403953552,0.020733652636408806,0.040625000572390484

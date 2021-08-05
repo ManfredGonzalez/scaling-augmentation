@@ -1,0 +1,4 @@
+metric,groundtruth_num,num_detections,nms_threshold,confidence_threshold,precision,recall,f1_score
+coco,1254,1241,0.4,0.4,0.9031456953642384,0.8763955342902712,0.8895695598852397
+metric,groundtruth_num,num_detections,nms_threshold,confidence_threshold,precision,recall,f1_score
+simple,1254,1241,0.4,0.4,0.9234488606452942,0.9138755798339844,0.9186372797056016

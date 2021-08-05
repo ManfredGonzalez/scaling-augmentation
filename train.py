@@ -120,11 +120,19 @@ def train(opt, use_seed, aug_policy_container):
                                     collate_fn= training_set.collater,
                                     num_workers= opt.num_workers)
 
+    if opt.use_only_aug:
+        val_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), 
+                                set=params.val_set,
+                                transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
+                                                            Resizer(input_sizes[opt.compound_coef])]),
+                                policy_container = aug_policy_container,
+                                use_only_aug = opt.use_only_aug)
+    else:
+        val_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), 
+                                set=params.val_set,
+                                transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
+                                                            Resizer(input_sizes[opt.compound_coef])]))
 
-    val_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), 
-                            set=params.val_set,
-                            transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
-                                                        Resizer(input_sizes[opt.compound_coef])]))
     val_generator = DataLoader(val_set, 
                                 batch_size= opt.batch_size, 
                                 shuffle= False,

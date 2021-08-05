@@ -23,7 +23,7 @@
                     "--seed_values", "42",
                     "--policy", "stac",
                     "--debug", "True"]
-            */
+            
             "args": ["--project", "apple_c1",
                 "--compound_coef", "0",
                 "--batch_size", "2",
@@ -36,6 +36,12 @@
                 "--policy", "stac",
                 "--debug", "False",
                 "--use_only_aug", "True"]
+            */
+            "args": ["--yolo_version","v3",
+                     "--input_path","datasets/yolo_format/5m_pineapple_yolov3/",
+                     "--classes_file","classes.txt",
+                     "-p","5m_pineapple_10",
+                     "--seed", "12"]
         }
     ]
 }
