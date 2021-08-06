@@ -436,7 +436,7 @@ def throttle_cpu(cpu_list):
 
 
 if __name__ == '__main__':
-    throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39]) 
+    #throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39]) 
     opt = get_args()
 
     # ask if we want to use a policy
@@ -454,9 +454,9 @@ if __name__ == '__main__':
         if opt.policy == 'stac':
             aug_policy = policies.policies_STAC()
             aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
-        elif opt.policy == 'scaling_10m':
+        elif opt.policy == 'scaling_6m':
             ori = 5
-            dest = 10
+            dest = 6
             scaling = 1/(dest/ori)
             aug_policy = policies.policies_pineapple(scaling)
             aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
@@ -464,9 +464,29 @@ if __name__ == '__main__':
             print('Scaling magnitude')
             print(scaling)
             print('#########################')
-        elif opt.policy == 'scaling_15m':
+        elif opt.policy == 'scaling_7m':
             ori = 5
-            dest = 15
+            dest = 7
+            scaling = 1/(dest/ori)
+            aug_policy = policies.policies_pineapple(scaling)
+            aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
+            print('#########################')
+            print('Scaling magnitude')
+            print(scaling)
+            print('#########################')
+      elif opt.policy == 'scaling_8m':
+            ori = 5
+            dest = 8
+            scaling = 1/(dest/ori)
+            aug_policy = policies.policies_pineapple(scaling)
+            aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
+            print('#########################')
+            print('Scaling magnitude')
+            print(scaling)
+            print('#########################')
+      elif opt.policy == 'scaling_9m':
+            ori = 5
+            dest = 9
             scaling = 1/(dest/ori)
             aug_policy = policies.policies_pineapple(scaling)
             aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
