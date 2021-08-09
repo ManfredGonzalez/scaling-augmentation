@@ -104,6 +104,7 @@ def train(opt, use_seed, aug_policy_container):
 
     # these are the standard sizes
     input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1356] 
+    #input_sizes = [1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280] 
 
     # define the training and validation sets
     training_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), 
@@ -216,7 +217,7 @@ def train(opt, use_seed, aug_policy_container):
         optimizer = torch.optim.SGD(model.parameters(), opt.lr, momentum=0.9, nesterov=True)
 
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True, factor=0.5, min_lr=1e-6)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=2, verbose=True, factor=0.5, min_lr=1e-6)
 
     # initial parameters
     epoch = 0
@@ -474,7 +475,7 @@ if __name__ == '__main__':
             print('Scaling magnitude')
             print(scaling)
             print('#########################')
-      elif opt.policy == 'scaling_8m':
+        elif opt.policy == 'scaling_8m':
             ori = 5
             dest = 8
             scaling = 1/(dest/ori)
@@ -484,7 +485,7 @@ if __name__ == '__main__':
             print('Scaling magnitude')
             print(scaling)
             print('#########################')
-      elif opt.policy == 'scaling_9m':
+        elif opt.policy == 'scaling_9m':
             ori = 5
             dest = 9
             scaling = 1/(dest/ori)

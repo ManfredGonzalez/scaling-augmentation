@@ -229,7 +229,10 @@ def files_to_array(annotations_file, class_file):
     with open(annotations_file, "r") as my_file:
         annotations_list = my_file.read().split('\n')
     with open(class_file, "r") as my_file:
-        class_list = my_file.read().split('\n')
+        #class_list = my_file.read().split('\n')
+        for line in my_file.read().split('\n'):
+            if len(line.strip()) > 1:
+                class_list.append(line)
     
     annotations_names = []
     annotations_bboxes = []
@@ -251,8 +254,12 @@ def files_to_array_yolov3(file_input_dir, class_file,img_extension):
     :annotaions_result(list of tuples) format: [('image_name.jpg', [anno_1, anno_2]), ... , (...)]
     :class_file(list of classes) string list of the names of the classes.
     """
+    class_list = []
     with open(class_file, "r") as my_file:
-        class_list = my_file.read().split('\n')
+        #class_list = my_file.read().split('\n')
+        for line in my_file.read().split('\n'):
+            if len(line.strip()) > 1:
+                class_list.append(line)
 
     myImages = [f for f in os.listdir(file_input_dir) if f.endswith(f'.{img_extension}')]
     

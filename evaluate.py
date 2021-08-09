@@ -151,7 +151,7 @@ def get_predictions(imgs_path,
                 # append the annotation in another format into a list
                 # required for the simple metric
                 xmin, ymin, w, h = box.tolist()
-                predictions_boxes.append([image_id, label+1, score, xmin, ymin, xmin + w, ymin + h])######### ?????????????????????????????
+                predictions_boxes.append([image_id, label + 1, score, xmin, ymin, xmin + w, ymin + h])######### ?????????????????????????????
 
     # write output
     filepath = f'results/{set_name}_bbox_results.json'
@@ -253,7 +253,8 @@ def run_metrics(compound_coef,
                 max_detect_list,
                 orig_height= 5,
                 dest_height= 8,
-                input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536],
+                #input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536],
+                input_sizes = [1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280],
                 metric_option='coco',
                 set_to_use='test_set',
                 augment_dataset=True,
@@ -472,51 +473,6 @@ def get_args():
     args = parser.parse_args()
     return args
 
-
-# wired test cases
-def test_case1():
-    #-------------------
-    #project_name = "apple_c1"
-    #weights_path = "logs/apple_c1_1/efficientdet-d0_trained_weights_semi_0.pth"
-    project_name = "5m_pineapple_10_T"
-    weights_path = "logs/quick_test/5m_pineapple_10_T/efficientdet-d0_best.pth"
-    compound_coef = 0
-    nms_threshold = 0.4
-    use_cuda = False
-    confidence_threshold = 0.4
-    max_detections = [10, 100, 1000]
-    #augment_dataset=False
-    #id_augmentation=1
-    #num_of_workers=None
-    #batch_size=None
-    #--------------------
-
-    if False:
-        run_metrics(compound_coef, 
-                    nms_threshold, 
-                    confidence_threshold,
-                    use_cuda,  
-                    project_name, 
-                    weights_path,   
-                    max_detections,
-                    augment_dataset=False,
-                    metric_option='simple',
-                    input_sizes = [1024, 640, 768, 896, 1024, 1280, 1280, 1536, 1536])
-                    
-    if True:
-        weights_path = "logs/quick_test/5m_pineapple_10_T/efficientdet-d0_best.pth"
-        run_metrics(compound_coef, 
-                    nms_threshold, 
-                    confidence_threshold, 
-                    use_cuda,  
-                    project_name, 
-                    weights_path,  
-                    max_detections,
-                    augment_dataset=True,
-                    metric_option='simple',
-                    orig_height= 5,
-                    dest_height= 10,
-                    input_sizes = [1024, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]) ##
 
 #main method to be called
 if __name__ == '__main__':

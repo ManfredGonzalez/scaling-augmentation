@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "env": { "CUDA_VISIBLE_DEVICES": "1"}, 
+            "env": { "CUDA_VISIBLE_DEVICES": "3"}, 
             /*
             "args": ["--project", "apple_h1",
                     "--compound_coef", "0",
@@ -24,19 +24,18 @@
                     "--policy", "stac",
                     "--debug", "True"]
             */
-            "args": ["--project", "5m_pineapple_d4_10m_v2",
+            "args": ["--project", "5m_pineapple_d4_6m",
                 "--compound_coef", "4",
-                "--batch_size", "2",
-                "--lr", "1e-4", 
-                "--load_weights", "weights/efficientdet-d4.pth", 
-                "--num_epochs", "1000", 
-                "--es_patience", "150",
-                "--use_seed", "True", 
-                "--seed_values", "12",
-                "--policy", "scaling_10m",
-                "--debug", "False",
-                "--use_only_aug", "True",
-                "--num_workers", "1"]
+                "--batch_size", "4",
+                "-w", "logs/5m_pineapple_d4_6m/efficientdet-d4_best.pth",
+                "--nms_thres", "0.4", 
+                "--conf_thres", "0.4", 
+                "--use_cuda", "True", 
+                "--augment_ds", "True",
+                "--metric", "simple",
+                "--orig_height", "5",
+                "--dest_height", "6",
+                "--max_detect", "10 100 1000"]
             /*
             "args": ["--yolo_version","v3",
                      "--input_path","datasets/yolo_format/5m_pineapple_yolov3/",
