@@ -104,6 +104,7 @@ def train(opt, use_seed, aug_policy_container):
 
     # these are the standard sizes
     input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1356] 
+    #input_sizes = [1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280] 
 
     # define the training and validation sets
     training_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), 
@@ -120,11 +121,19 @@ def train(opt, use_seed, aug_policy_container):
                                     collate_fn= training_set.collater,
                                     num_workers= opt.num_workers)
 
+    if opt.use_only_aug:
+        val_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), 
+                                set=params.val_set,
+                                transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
+                                                            Resizer(input_sizes[opt.compound_coef])]),
+                                policy_container = aug_policy_container,
+                                use_only_aug = opt.use_only_aug)
+    else:
+        val_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), 
+                                set=params.val_set,
+                                transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
+                                                            Resizer(input_sizes[opt.compound_coef])]))
 
-    val_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), 
-                            set=params.val_set,
-                            transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
-                                                        Resizer(input_sizes[opt.compound_coef])]))
     val_generator = DataLoader(val_set, 
                                 batch_size= opt.batch_size, 
                                 shuffle= False,
@@ -208,7 +217,7 @@ def train(opt, use_seed, aug_policy_container):
         optimizer = torch.optim.SGD(model.parameters(), opt.lr, momentum=0.9, nesterov=True)
 
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=20, verbose=True, factor=0.3, min_lr=1e-8)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=2, verbose=True, factor=0.5, min_lr=1e-6)
 
     # initial parameters
     epoch = 0
@@ -428,7 +437,7 @@ def throttle_cpu(cpu_list):
 
 
 if __name__ == '__main__':
-    throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39]) 
+    #throttle_cpu([28,29,30,31,32,33,34,35,36,37,38,39]) 
     opt = get_args()
 
     # ask if we want to use a policy
@@ -446,9 +455,9 @@ if __name__ == '__main__':
         if opt.policy == 'stac':
             aug_policy = policies.policies_STAC()
             aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
-        elif opt.policy == 'scaling_10m':
+        elif opt.policy == 'scaling_6m':
             ori = 5
-            dest = 10
+            dest = 6
             scaling = 1/(dest/ori)
             aug_policy = policies.policies_pineapple(scaling)
             aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
@@ -456,9 +465,29 @@ if __name__ == '__main__':
             print('Scaling magnitude')
             print(scaling)
             print('#########################')
-        elif opt.policy == 'scaling_15m':
+        elif opt.policy == 'scaling_7m':
             ori = 5
-            dest = 15
+            dest = 7
+            scaling = 1/(dest/ori)
+            aug_policy = policies.policies_pineapple(scaling)
+            aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
+            print('#########################')
+            print('Scaling magnitude')
+            print(scaling)
+            print('#########################')
+        elif opt.policy == 'scaling_8m':
+            ori = 5
+            dest = 8
+            scaling = 1/(dest/ori)
+            aug_policy = policies.policies_pineapple(scaling)
+            aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
+            print('#########################')
+            print('Scaling magnitude')
+            print(scaling)
+            print('#########################')
+        elif opt.policy == 'scaling_9m':
+            ori = 5
+            dest = 9
             scaling = 1/(dest/ori)
             aug_policy = policies.policies_pineapple(scaling)
             aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)

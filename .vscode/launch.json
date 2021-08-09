@@ -24,18 +24,25 @@
                     "--policy", "stac",
                     "--debug", "True"]
             */
-            "args": ["--project", "apple_c1",
-                "--compound_coef", "0",
-                "--batch_size", "2",
-                "--lr", "1e-2", 
-                "--load_weights", "weights/efficientdet-d0.pth", 
-                "--num_epochs", "5", 
-                "--es_patience", "300",
-                "--use_seed", "True", 
-                "--seed_values", "2",
-                "--policy", "stac",
-                "--debug", "False",
-                "--use_only_aug", "True"]
+            "args": ["--project", "5m_pineapple_d4_6m",
+                "--compound_coef", "4",
+                "--batch_size", "4",
+                "-w", "logs/5m_pineapple_d4_6m/efficientdet-d4_best.pth",
+                "--nms_thres", "0.4", 
+                "--conf_thres", "0.4", 
+                "--use_cuda", "True", 
+                "--augment_ds", "True",
+                "--metric", "simple",
+                "--orig_height", "5",
+                "--dest_height", "6",
+                "--max_detect", "10 100 1000"]
+            /*
+            "args": ["--yolo_version","v3",
+                     "--input_path","datasets/yolo_format/5m_pineapple_yolov3/",
+                     "--classes_file","classes.txt",
+                     "-p","5m_pineapple_10",
+                     "--seed", "12"]
+            */
         }
     ]
 }

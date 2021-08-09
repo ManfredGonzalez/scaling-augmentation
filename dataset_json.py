@@ -42,7 +42,10 @@ def copy_data():
 
     
 def split_data(file_input_dir, output_folder, 
-               classes_file, name_1, name_2, name_3, set_1, set_2, set_3, shuffle, sub_sample, seed, img_extension, annotations_file=None):
+               classes_file, 
+               name_1, name_2, name_3, 
+               set_1, set_2, set_3, 
+               shuffle, sub_sample, seed, img_extension, annotations_file=None):
     """
     Method to split into train/test/val sets.
 
@@ -57,9 +60,12 @@ def split_data(file_input_dir, output_folder,
     """
     #get data
     if annotations_file:
-        anns_names_list, anns_bboxes_list, class_list = files_to_array(file_input_dir + annotations_file, file_input_dir + classes_file)
+        anns_names_list, anns_bboxes_list, class_list = files_to_array(file_input_dir + annotations_file, 
+                                                                       file_input_dir + classes_file)
     else:
-        anns_names_list, anns_bboxes_list, class_list = files_to_array_yolov3(file_input_dir, file_input_dir + classes_file,img_extension)
+        anns_names_list, anns_bboxes_list, class_list = files_to_array_yolov3(file_input_dir, 
+                                                                              file_input_dir + classes_file,
+                                                                              img_extension)
     #check if the splits make sense
     if set_1 + set_2 + set_3 != 1.0:
         raise Exception("The split should sum 1.0")
@@ -107,7 +113,7 @@ def split_data(file_input_dir, output_folder,
         file_extension = name[-3:]
         file_name = name[:-4]
     
-        if file_extension == img_extension:        
+        if file_extension.upper() == img_extension.upper():        
             names_.append(file_name.strip())
     
     #If we want just a subset
@@ -223,7 +229,10 @@ def files_to_array(annotations_file, class_file):
     with open(annotations_file, "r") as my_file:
         annotations_list = my_file.read().split('\n')
     with open(class_file, "r") as my_file:
-        class_list = my_file.read().split('\n')
+        #class_list = my_file.read().split('\n')
+        for line in my_file.read().split('\n'):
+            if len(line.strip()) > 1:
+                class_list.append(line)
     
     annotations_names = []
     annotations_bboxes = []
@@ -245,8 +254,12 @@ def files_to_array_yolov3(file_input_dir, class_file,img_extension):
     :annotaions_result(list of tuples) format: [('image_name.jpg', [anno_1, anno_2]), ... , (...)]
     :class_file(list of classes) string list of the names of the classes.
     """
+    class_list = []
     with open(class_file, "r") as my_file:
-        class_list = my_file.read().split('\n')
+        #class_list = my_file.read().split('\n')
+        for line in my_file.read().split('\n'):
+            if len(line.strip()) > 1:
+                class_list.append(line)
 
     myImages = [f for f in os.listdir(file_input_dir) if f.endswith(f'.{img_extension}')]
     
@@ -386,7 +399,7 @@ def get_args():
     parser.add_argument('--ratio_set_2', type=float, default=0.15) 
     parser.add_argument('--ratio_set_3', type=float, default=0.15)
     parser.add_argument('--shuffle', type=boolean_string, default=True) 
-    parser.add_argument('--seed', type=int, default=10)
+    parser.add_argument('--seed', type=int, default=None)
     parser.add_argument('--sub_sample', type=int, default=0)
     parser.add_argument('--img_extension', type=str, default='jpg')
 
@@ -422,17 +435,18 @@ if __name__ == '__main__':
                                 opt.set_1, opt.set_2, opt.set_3,
                                 opt.ratio_set_1, opt.ratio_set_2, opt.ratio_set_3, 
                                 opt.shuffle, opt.sub_sample, opt.seed, opt.img_extension,annotations_file = None)
+                                
         create_project_file(opt.project_name, output_yml, opt.set_1, opt.set_2, opt.set_3, opt.set_4, class_list)
+
     elif opt.yolo_version == 'v4': 
         class_list = split_data(opt.input_path, output_folder, opt.classes_file, 
                                 opt.set_1, opt.set_2, opt.set_3,
                                 opt.ratio_set_1, opt.ratio_set_2, opt.ratio_set_3, 
-                                opt.shuffle, opt.ub_sample, opt.seed, opt.img_extension,annotations_file = opt.annotations_file)
+                                opt.shuffle, opt.sub_sample, opt.seed, opt.img_extension,annotations_file = opt.annotations_file)
         create_project_file(opt.project_name, output_yml, opt.set_1, opt.set_2, opt.set_3, opt.set_4, class_list)
-    #create yml
-    
 
 
+    '''
     if(False):
         input_path = 'datasets/yolo_format/apple_yolov4pytorch/'
         annotations_file = "_annotations.txt"
@@ -462,3 +476,4 @@ if __name__ == '__main__':
                                 shuffle, sub_sample, seed, img_extension)
         #create yml
         create_project_file(project_name, output_yml, set_1, set_3, set_3, set_2, class_list)
+    '''
