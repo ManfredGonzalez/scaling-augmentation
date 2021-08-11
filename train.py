@@ -103,7 +103,7 @@ def train(opt, use_seed, aug_policy_container):
     os.makedirs(opt.saved_path, exist_ok=True)
 
     # these are the standard sizes
-    input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1356] 
+    input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536] 
     #input_sizes = [1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280] 
 
     # define the training and validation sets
@@ -422,6 +422,8 @@ def get_args():
     parser.add_argument('--shuffle_ds', type=boolean_string, default=True)
     parser.add_argument('--policy', type=str, default="")
     parser.add_argument('--use_only_aug', type=boolean_string, default=False)
+    parser.add_argument('--orig_height', type=float, default=0)
+    parser.add_argument('--dest_height', type=float, default=0)
 
     args = parser.parse_args()
     return args
@@ -455,6 +457,18 @@ if __name__ == '__main__':
         if opt.policy == 'stac':
             aug_policy = policies.policies_STAC()
             aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
+
+        if opt.policy == 'scaling':
+            orig = opt.orig_height
+            dest = opt.dest_height
+            scaling_ratio = 1.0/(dest/orig)
+            aug_policy = policies.policies_pineapple(scaling_ratio)
+            aug_policy_container = policies.PolicyContainer(aug_policy, random_state = None if opt.use_seed == False else 42)
+            print('#########################')
+            print('Scaling magnitude')
+            print(scaling_ratio)
+            print('#########################')
+        '''
         elif opt.policy == 'scaling_6m':
             ori = 5
             dest = 6
@@ -495,4 +509,5 @@ if __name__ == '__main__':
             print('Scaling magnitude')
             print(scaling)
             print('#########################')
+        '''
     train(opt, opt.use_seed, aug_policy_container) 

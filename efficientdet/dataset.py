@@ -108,10 +108,10 @@ class CocoDataset(Dataset):
         labels = []
         for i in range(len(coco_annotation)):
             label = coco_annotation[i]['category_id'] - 1
-            xmin = coco_annotation[i]['bbox'][0]
-            ymin = coco_annotation[i]['bbox'][1]
-            xmax = xmin + coco_annotation[i]['bbox'][2]
-            ymax = ymin + coco_annotation[i]['bbox'][3]
+            xmin = float(coco_annotation[i]['bbox'][0])
+            ymin = float(coco_annotation[i]['bbox'][1])
+            xmax = xmin + float(coco_annotation[i]['bbox'][2])
+            ymax = ymin + float(coco_annotation[i]['bbox'][3])
             boxes.append([xmin, ymin, xmax, ymax])
             labels.append(int(label))
         

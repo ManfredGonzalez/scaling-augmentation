@@ -128,6 +128,7 @@ def split_data(file_input_dir, output_folder,
     y_dumpy = np.zeros(len(names_))
     X_train, X_test_big, _, y_test_big = train_test_split(names_, y_dumpy, train_size = set_1, shuffle=shuffle, random_state=seed)
     
+    
     #Copy into the training
     #-------------------
     print(f"{name_1}: ", len(X_train))

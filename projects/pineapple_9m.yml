@@ -1,4 +1,4 @@
-project_name: 5m_pineapple_d4_5m
+project_name: pineapple_9m
 train_set: train
 train_set_unlabeled: None
 val_set: val

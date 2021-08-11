@@ -11,6 +11,8 @@ from bbaug.policies import policies
 from shutil import copyfile
 import json
 
+from torchvision import transforms
+
 class cocoDataset(torch.utils.data.Dataset):
     def __init__(self, root, annotation, policy_container=None, just_aug=None):
         self.root = root
@@ -125,6 +127,8 @@ class cocoDataset(torch.utils.data.Dataset):
     
     def __len__(self):
         return len(self.ids)
+
+
 def lists_to_json(class_list):
     """
     Transform the class list into json.
@@ -203,7 +207,14 @@ def annotations_to_json(im, img_name, img_index, img_extension,
         ann_counter += 1
     return json_data, ann_counter
 
-def generate_COCO_Dataset_transformed(output_imgs_folder,output_json_name,obj_list,inpur_dir_images,input_coco_anns,aug_policy,num_of_workers,batch_size):
+def generate_COCO_Dataset_transformed(output_imgs_folder,
+                                      output_json_name,
+                                      obj_list,
+                                      inpur_dir_images,
+                                      input_coco_anns,
+                                      aug_policy,
+                                      num_of_workers,
+                                      batch_size):
     '''
      Generate a transformation of the ground truth with the specified augmentation policy
 
@@ -220,6 +231,8 @@ def generate_COCO_Dataset_transformed(output_imgs_folder,output_json_name,obj_li
     :annotations file (pycocotools.coco)
     :transformed images (.jpg)
     '''
+    tensor_to_image = transforms.ToPILImage()
+
     aug_policy_container = policies.PolicyContainer(aug_policy, random_state=42)
     # Generate the dataloader just with transformed images.
     write_just_aug = True
@@ -248,18 +261,22 @@ def generate_COCO_Dataset_transformed(output_imgs_folder,output_json_name,obj_li
 
     json_data_train = lists_to_json(obj_list)
     image_id = 0
+    ann_counter = 0
     for batch in data_extractor:
         images, targets, imgs_names = batch
 
-        ann_counter = 0
         for img_index, img_name in enumerate(imgs_names):
             img_extension = img_name[len(img_name)-3:]
             img_name =  img_name[0:len(img_name)-4]   
-            image = images[img_index]
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            cv2.imwrite(output_imgs_folder +img_name+'.'+img_extension,image)
+            img = images[img_index]
+
+            tensor_to_image(img).save(output_imgs_folder +img_name+'.'+img_extension)
+
+            #image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            #cv2.imwrite(output_imgs_folder +img_name+'.'+img_extension,image)
+            
             #include annotations in the json
-            final_json_train, ann_counter = annotations_to_json(image, img_name, image_id, img_extension, ann_counter,
+            final_json_train, ann_counter = annotations_to_json(img, img_name, image_id, img_extension, ann_counter,
                                                                         imgs_names, targets, json_data_train)
 
             #save json file

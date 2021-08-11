@@ -162,7 +162,8 @@ def get_predictions(imgs_path,
     # return number of detections
     return len(results), predictions_boxes
 
-#Run the evaluation of the model using pycocotools
+
+
 def eval_pycoco_tools(image_ids, 
                     coco_gt, 
                     pred_json_path, 
@@ -253,8 +254,8 @@ def run_metrics(compound_coef,
                 max_detect_list,
                 orig_height= 5,
                 dest_height= 8,
-                #input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536],
-                input_sizes = [1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280],
+                input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536],
+                #input_sizes = [1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280, 1280],
                 metric_option='coco',
                 set_to_use='test_set',
                 augment_dataset=True,
@@ -324,7 +325,8 @@ def run_metrics(compound_coef,
                 my_file.write(f'{new_set_name}: {new_set_name}\n')
 
         # calculate the magnitude for the scaling policy
-        real_scale = 1/(dest_height/orig_height)
+        real_scale = 1.0/(dest_height/orig_height)
+        
         # instance the scaling policy
         aug_policy = policies.policies_pineapple(real_scale)
         #---------
@@ -344,7 +346,6 @@ def run_metrics(compound_coef,
         dataset_json = f'datasets/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
         dataset_imgs_path = f'datasets/{params["project_name"]}/{SET_NAME}/'
     #==================================
-
 
     # load data set
     coco = COCO(dataset_json)
