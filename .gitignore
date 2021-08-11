@@ -135,4 +135,11 @@ dmypy.json
 /logs
 /datasets
 /results
+/weights
+/projects
+efficientDet_dataset_aug_test.py
+datasets/apple_h1/results/img_2017_png_jpg.rf.bd93dfa2d5c535a02dc75e6f5850bbab_aug.JPG
+datasets/apple_h1/results/E12812977-14_png_jpg.rf.54084fd3321e280f116b76e4c72219cb_aug.JPG
+datasets/apple_h1/results/APPLE_png_jpg.rf.e88864c3a768e13351ee42063e4e3699_aug.JPG
+results/test_bbox_results.json
 /.vscode
